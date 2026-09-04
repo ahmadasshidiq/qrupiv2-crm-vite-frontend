@@ -1,0 +1,2 @@
+import type { BackendModuleConfig } from '@/components/backend-module-page'
+export const QUIZZES_PAGE_CONFIG: BackendModuleConfig = { title: 'Kuis', description: 'Kelola soal dan kuis pembelajaran.', emptyMessage: 'Belum ada kuis', fields: [{ key: 'title', title: 'Judul kuis' }, { key: 'learning_group_name', title: 'Grup belajar' }, { key: 'type', title: 'Tipe' }, { key: 'duration_minutes', title: 'Durasi (menit)' }, { key: 'quiz_count_question', title: 'Jumlah soal' }, { key: 'created_user_name', title: 'Dibuat oleh' }] }

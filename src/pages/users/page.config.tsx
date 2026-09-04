@@ -1,0 +1,2 @@
+import type { BackendModuleConfig } from '@/components/backend-module-page'
+export const USERS_PAGE_CONFIG: BackendModuleConfig = { title: 'Pengguna', description: 'Kelola guru, admin, staf, dan siswa.', emptyMessage: 'Belum ada pengguna', fields: [{ key: 'name', title: 'Nama' }, { key: 'email', title: 'Email' }, { key: 'role_name', title: 'Role' }, { key: 'institution_name', title: 'Institusi' }, { key: 'type', title: 'Tipe' }, { key: 'is_active', title: 'Status' }] }

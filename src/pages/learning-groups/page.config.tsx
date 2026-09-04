@@ -1,0 +1,2 @@
+import type { BackendModuleConfig } from '@/components/backend-module-page'
+export const LEARNING_GROUPS_PAGE_CONFIG: BackendModuleConfig = { title: 'Grup belajar', description: 'Kelola kelas dan kelompok pembelajaran.', emptyMessage: 'Belum ada grup belajar', fields: [{ key: 'name', title: 'Nama grup' }, { key: 'code', title: 'Kode' }, { key: 'level', title: 'Tingkat' }, { key: 'department', title: 'Jurusan/mapel' }, { key: 'academic_year', title: 'Tahun ajaran' }, { key: 'is_active', title: 'Status' }] }

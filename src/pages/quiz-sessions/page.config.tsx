@@ -1,0 +1,2 @@
+import type { BackendModuleConfig } from '@/components/backend-module-page'
+export const QUIZ_SESSIONS_PAGE_CONFIG: BackendModuleConfig = { title: 'Sesi kuis', description: 'Pantau pelaksanaan dan hasil sesi kuis.', emptyMessage: 'Belum ada sesi kuis', fields: [{ key: 'quiz_title', title: 'Kuis' }, { key: 'user_name', title: 'Peserta' }, { key: 'learning_group_name', title: 'Grup belajar' }, { key: 'status', title: 'Status' }, { key: 'score', title: 'Nilai' }, { key: 'cheating_count', title: 'Peringatan' }] }

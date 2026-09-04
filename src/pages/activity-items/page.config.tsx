@@ -1,0 +1,2 @@
+import type { BackendModuleConfig } from '@/components/backend-module-page'
+export const ACTIVITY_ITEMS_PAGE_CONFIG: BackendModuleConfig = { title: 'Jenis aktivitas', description: 'Atur jenis aktivitas, poin, dan batas periode.', emptyMessage: 'Belum ada jenis aktivitas', fields: [{ key: 'name', title: 'Nama aktivitas' }, { key: 'type', title: 'Tipe' }, { key: 'point_value', title: 'Poin' }, { key: 'period_type', title: 'Periode' }] }

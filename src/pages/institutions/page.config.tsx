@@ -1,0 +1,2 @@
+import type { BackendModuleConfig } from '@/components/backend-module-page'
+export const INSTITUTIONS_PAGE_CONFIG: BackendModuleConfig = { title: 'Institusi', description: 'Kelola sekolah dan institusi dalam ekosistem Qrupi.', emptyMessage: 'Belum ada institusi', fields: [{ key: 'name', title: 'Nama institusi' }, { key: 'code', title: 'Kode' }, { key: 'province_name', title: 'Provinsi' }, { key: 'regency_name', title: 'Kabupaten/Kota' }, { key: 'phone', title: 'Telepon' }, { key: 'status', title: 'Status' }] }

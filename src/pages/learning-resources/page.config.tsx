@@ -1,0 +1,2 @@
+import type { BackendModuleConfig } from '@/components/backend-module-page'
+export const LEARNING_RESOURCES_PAGE_CONFIG: BackendModuleConfig = { title: 'Materi belajar', description: 'Kelola materi dan sumber pembelajaran.', emptyMessage: 'Belum ada materi belajar', fields: [{ key: 'title', title: 'Judul' }, { key: 'type', title: 'Tipe' }, { key: 'learning_group_names', title: 'Grup belajar' }, { key: 'uploaded_user_name', title: 'Pengunggah' }, { key: 'institution_name', title: 'Institusi' }, { key: 'updated_at', title: 'Diperbarui', type: 'date' }] }
