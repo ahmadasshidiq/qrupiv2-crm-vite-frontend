@@ -1,2 +1,2 @@
-import type { ApiRecordDto } from '@/lib/dto/api'
-export type ActivityCategoryRow = ApiRecordDto
+import type { ApiRecordDto } from "@/lib/dto/api";
+export type ActivityCategoryRow = ApiRecordDto;

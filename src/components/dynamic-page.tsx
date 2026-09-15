@@ -38,6 +38,7 @@ export type DynamicPageProps<T = object> = {
   bodyRowClassName?: string;
   onPageChange?: (page: number) => void;
   renderActions?: (row: T) => ReactNode;
+  cardRenderer?: (items: T[]) => ReactNode;
   getRowId?: (row: T, index: number) => string;
 };
 
@@ -55,18 +56,34 @@ export default function DynamicPage<T extends object>({
   bodyRowClassName,
   onPageChange,
   renderActions,
+  cardRenderer,
   getRowId,
 }: DynamicPageProps<T>) {
   const hasPagination = totalPages > 1 && Boolean(onPageChange);
   const hasActions = Boolean(renderActions);
 
   return (
-    <div className={cn("rounded-[16px] border border-slate-200 bg-white p-6 text-slate-900 shadow-sm dark:text-slate-100", DARK_GLASS_PANEL_CLASS)}>
+    <div
+      className={cn(
+        "rounded-[16px] border border-slate-200 bg-white p-6 text-slate-900 shadow-sm dark:text-slate-100",
+        DARK_GLASS_PANEL_CLASS,
+      )}
+    >
       {toolbar ? <div className="mb-6">{toolbar}</div> : null}
       {filterPanel ? <div className="mb-6">{filterPanel}</div> : null}
 
-      <div className={cn("overflow-x-auto transition-opacity duration-200", loading && "opacity-60")}>
-        <Table className={cn("min-w-full text-slate-900 dark:text-slate-200", tableClassName)}>
+      <div
+        className={cn(
+          "overflow-x-auto transition-opacity duration-200",
+          loading && "opacity-60",
+        )}
+      >
+        {cardRenderer ? cardRenderer(items) : <Table
+          className={cn(
+            "min-w-full text-slate-900 dark:text-slate-200",
+            tableClassName,
+          )}
+        >
           <TableHeader>
             <TableRow className="border-slate-200 hover:bg-transparent dark:border-white/10">
               {columns.map((column) => (
@@ -81,7 +98,7 @@ export default function DynamicPage<T extends object>({
                 </TableHead>
               ))}
               {hasActions ? (
-                <TableHead className="h-auto border-b border-slate-200 px-4 py-5 text-[14px] font-semibold text-slate-700 whitespace-nowrap text-right dark:border-white/10 dark:text-slate-200">
+                <TableHead className="sticky right-0 z-20 h-auto min-w-32 border-b border-slate-200 bg-slate-50 px-4 py-5 text-right text-[14px] font-semibold whitespace-nowrap text-slate-700 shadow-[-12px_0_16px_-16px_rgb(15_23_42_/_0.55)] dark:border-white/10 dark:bg-slate-900 dark:text-slate-200">
                   Aksi
                 </TableHead>
               ) : null}
@@ -91,14 +108,29 @@ export default function DynamicPage<T extends object>({
           <TableBody>
             {loading && items.length === 0 ? (
               Array.from({ length: 5 }, (_, rowIndex) => (
-                <TableRow key={`loading-${rowIndex}`} className="border-slate-200 dark:border-white/10">
-                  {columns.map((column) => <TableCell key={`${rowIndex}-${column.key}`} className="px-4 py-5"><Skeleton className="h-4 w-full max-w-40" /></TableCell>)}
-                  {hasActions ? <TableCell className="px-4 py-5"><Skeleton className="ml-auto h-8 w-20" /></TableCell> : null}
+                <TableRow
+                  key={`loading-${rowIndex}`}
+                  className="border-slate-200 dark:border-white/10"
+                >
+                  {columns.map((column) => (
+                    <TableCell
+                      key={`${rowIndex}-${column.key}`}
+                      className="px-4 py-5"
+                    >
+                      <Skeleton className="h-4 w-full max-w-40" />
+                    </TableCell>
+                  ))}
+                  {hasActions ? (
+                    <TableCell className="sticky right-0 z-10 min-w-32 bg-white px-4 py-5 shadow-[-12px_0_16px_-16px_rgb(15_23_42_/_0.55)] dark:bg-slate-900">
+                      <Skeleton className="ml-auto h-8 w-20" />
+                    </TableCell>
+                  ) : null}
                 </TableRow>
               ))
             ) : items.length > 0 ? (
               items.map((row, index) => {
-                const rowId = getRowId?.(row, index) ?? getFallbackRowId(row, index);
+                const rowId =
+                  getRowId?.(row, index) ?? getFallbackRowId(row, index);
                 return (
                   <TableRow
                     key={rowId}
@@ -113,16 +145,18 @@ export default function DynamicPage<T extends object>({
                         <TableCell
                           key={`${rowId}-${column.key}`}
                           className={cn(
-                            "border-b border-slate-200 px-4 py-5 text-[15px] leading-6 text-slate-700 whitespace-nowrap dark:border-white/10 dark:text-slate-200/95",
+                            "border-b border-slate-200 px-4 py-5 text-[14px] leading-6 text-slate-700 whitespace-nowrap dark:border-white/10 dark:text-slate-200/95",
                             column.textClassName,
                           )}
                         >
-                          {column.formatter ? column.formatter(value, row) : renderDefaultCell(value, column.type)}
+                          {column.formatter
+                            ? column.formatter(value, row)
+                            : renderDefaultCell(value, column.type)}
                         </TableCell>
                       );
                     })}
                     {hasActions ? (
-                      <TableCell className="border-b border-slate-200 px-4 py-5 text-right dark:border-white/10">
+                      <TableCell className="sticky right-0 z-10 min-w-32 border-b border-slate-200 bg-white px-4 py-5 text-right shadow-[-12px_0_16px_-16px_rgb(15_23_42_/_0.55)] dark:border-white/10 dark:bg-slate-950">
                         {renderActions?.(row)}
                       </TableCell>
                     ) : null}
@@ -140,15 +174,27 @@ export default function DynamicPage<T extends object>({
               </TableRow>
             )}
           </TableBody>
-        </Table>
+        </Table>}
       </div>
 
       <div className="mt-6 flex flex-col gap-3 pt-5 text-slate-600 dark:border-white/10 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[14px]">
-          Menampilkan <span className="font-semibold text-slate-900 dark:text-slate-100">{items.length}</span> dari{" "}
-          <span className="font-semibold text-slate-900 dark:text-slate-100">{total}</span> data — Halaman{" "}
-          <span className="font-semibold text-slate-900 dark:text-slate-100">{currentPage}</span> dari{" "}
-          <span className="font-semibold text-slate-900 dark:text-slate-100">{totalPages}</span>
+        <p className="text-[13px]">
+          Menampilkan{" "}
+          <span className="font-semibold text-slate-900 dark:text-slate-100">
+            {items.length}
+          </span>{" "}
+          dari{" "}
+          <span className="font-semibold text-slate-900 dark:text-slate-100">
+            {total}
+          </span>{" "}
+          data — Halaman{" "}
+          <span className="font-semibold text-slate-900 dark:text-slate-100">
+            {currentPage}
+          </span>{" "}
+          dari{" "}
+          <span className="font-semibold text-slate-900 dark:text-slate-100">
+            {totalPages}
+          </span>
         </p>
 
         {hasPagination ? (
@@ -163,7 +209,9 @@ export default function DynamicPage<T extends object>({
             </Button>
             <Button
               type="button"
-              onClick={() => onPageChange?.(Math.min(currentPage + 1, totalPages))}
+              onClick={() =>
+                onPageChange?.(Math.min(currentPage + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-white/[0.08] dark:text-slate-200 dark:hover:bg-white/[0.12]"
             >

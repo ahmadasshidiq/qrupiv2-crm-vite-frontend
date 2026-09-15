@@ -30,11 +30,14 @@ export function GlobalSearch() {
   const shortcutLabel = /Mac|iPhone|iPad/i.test(navigator.platform)
     ? "⌘ K"
     : "Ctrl K";
-  const searchablePages = useMemo(() => [
-    ...SEARCH_SUGGESTIONS,
-    ...APP_MODULES
-      .filter((resource) => !resource.roles || resource.roles.some((allowedRole) => role.includes(allowedRole)))
-      .map((resource, index) => ({
+  const searchablePages = useMemo(
+    () => [
+      ...SEARCH_SUGGESTIONS,
+      ...APP_MODULES.filter(
+        (resource) =>
+          !resource.roles ||
+          resource.roles.some((allowedRole) => role.includes(allowedRole)),
+      ).map((resource, index) => ({
         label: resource.title,
         description: resource.description,
         category: "Halaman",
@@ -43,7 +46,9 @@ export function GlobalSearch() {
         icon: resource.icon,
         tone: (["blue", "violet", "emerald", "orange"] as const)[index % 4],
       })),
-  ], [role]);
+    ],
+    [role],
+  );
   const suggestions = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return searchablePages.slice(0, 6);
@@ -51,7 +56,9 @@ export function GlobalSearch() {
     return searchablePages.filter(
       ({ label, description, category, keywords }) =>
         queryTokens.every((token) =>
-          [label, description, category, ...keywords].some((value) => value.toLowerCase().includes(token)),
+          [label, description, category, ...keywords].some((value) =>
+            value.toLowerCase().includes(token),
+          ),
         ),
     );
   }, [query, searchablePages]);

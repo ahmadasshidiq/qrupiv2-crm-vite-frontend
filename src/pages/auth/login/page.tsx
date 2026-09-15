@@ -28,7 +28,9 @@ export default function LoginPage() {
       });
       if (!canAccessCrm(session.user)) {
         clearSession();
-        throw new Error("Akun siswa tidak memiliki akses ke CRM. Silakan gunakan aplikasi LMS Qrupi.");
+        throw new Error(
+          "Akun siswa tidak memiliki akses ke CRM. Silakan gunakan aplikasi LMS Qrupi.",
+        );
       }
       persistSession(session, values.remember);
       setStatus("success");

@@ -1,2 +1,2 @@
-import type { ApiRecordDto } from '@/lib/dto/api'
-export type RoleRow = ApiRecordDto
+import type { ApiRecordDto } from "@/lib/dto/api";
+export type RoleRow = ApiRecordDto;
