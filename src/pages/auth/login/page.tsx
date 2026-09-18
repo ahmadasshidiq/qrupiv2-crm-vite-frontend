@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { LoginForm } from "./components/login-form";
 import { LoginShowcase } from "./components/login-showcase";
 import { login, persistSession } from "./actions";
@@ -11,15 +12,16 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [status, setStatus] = useState<LoginStatus>("idle");
-  const [errorMessage, setErrorMessage] = useState<string | null>(() => {
+  useEffect(() => {
     const state = location.state as { error?: string } | null;
-    return state?.error ?? null;
-  });
+    if (!state?.error) return;
+
+    toast.error(state.error);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   async function handleLogin(values: LoginFormValues) {
     setStatus("submitting");
-    setErrorMessage(null);
-
     try {
       const session = await login({
         email: values.email,
@@ -34,14 +36,14 @@ export default function LoginPage() {
       }
       persistSession(session, values.remember);
       setStatus("success");
+      toast.success("Login berhasil.");
       navigate("/dashboard", { replace: true });
     } catch (error) {
       setStatus("error");
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Login gagal. Silakan coba lagi.",
-      );
+      const message = error instanceof Error
+        ? error.message
+        : "Login gagal. Silakan coba lagi.";
+      toast.error(message);
     }
   }
 
@@ -68,7 +70,6 @@ export default function LoginPage() {
           </h1>
           <LoginForm
             status={status}
-            errorMessage={errorMessage}
             onSubmit={handleLogin}
           />
           <p className="mt-4 text-center text-[9px] leading-4 text-zinc-500 sm:text-[11px] sm:leading-5">

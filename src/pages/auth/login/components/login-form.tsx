@@ -14,7 +14,6 @@ import type { LoginFormValues, LoginStatus } from "../types";
 
 type LoginFormProps = {
   status: LoginStatus;
-  errorMessage: string | null;
   onSubmit: (values: LoginFormValues) => Promise<void>;
 };
 
@@ -32,7 +31,7 @@ const QRUPI_APPS = [
   { label: "LMS", url: import.meta.env.VITE_QRUPI_LMS_URL, icon: BookOpen },
 ];
 
-export function LoginForm({ status, errorMessage, onSubmit }: LoginFormProps) {
+export function LoginForm({ status, onSubmit }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const isSubmitting = status === "submitting";
 
@@ -109,16 +108,6 @@ export function LoginForm({ status, errorMessage, onSubmit }: LoginFormProps) {
             {showPassword ? <EyeOff /> : <Eye />}
           </Button>
         </div>
-        {errorMessage && (
-          <p className="text-xs text-red-600" role="alert">
-            {errorMessage}
-          </p>
-        )}
-        {status === "success" && (
-          <p className="text-xs text-emerald-600" role="status">
-            Login berhasil.
-          </p>
-        )}
         <Button
           type="submit"
           disabled={isSubmitting}
