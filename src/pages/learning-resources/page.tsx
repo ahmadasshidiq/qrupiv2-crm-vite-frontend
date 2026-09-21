@@ -28,7 +28,7 @@ export default function LearningResourcesPage() {
               {
                 key: "type",
                 operator: "in",
-                value: ["file", "video", "link"],
+                value: ["file", "video", "link", "interactive-media"],
               },
             ],
             column: [

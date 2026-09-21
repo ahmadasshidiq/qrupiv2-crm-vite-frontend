@@ -54,7 +54,12 @@ export type BackendModuleConfig = {
   fields: DefaultColumnFormat<ApiRecordDto>[];
   actions?: Partial<Record<ModuleAction, boolean>>;
   filterFields?: FilterField[];
-  toolbarActions?: Array<{ label: string; href: string; icon?: LucideIcon; className?: string }>;
+  toolbarActions?: Array<{
+    label: string;
+    href: string;
+    icon?: LucideIcon;
+    className?: string;
+  }>;
   headerAction?: {
     label: string;
     icon?: LucideIcon;
@@ -69,6 +74,7 @@ export type BackendModuleConfig = {
   multipart?: boolean;
   createEndpoint?: string;
   createPayload?: (values: Record<string, unknown>) => Record<string, unknown>;
+  updatePayload?: (values: Record<string, unknown>) => Record<string, unknown>;
 };
 
 export type ModuleAction =
@@ -102,6 +108,8 @@ export type ModuleFormField = {
     | "datetime-local"
     | "textarea"
     | "file"
+    | "file-multi"
+    | "url-multi"
     | "region"
     | "role"
     | "activity-category"
@@ -109,6 +117,7 @@ export type ModuleFormField = {
     | "resource-multi"
     | "learning-groups"
     | "quiz-questions"
+    | "h5p-editor"
     | "hidden";
   placeholder?: string;
   helperText?: string;
@@ -370,15 +379,14 @@ export function DefaultModulePage({
   const columns = useMemo<DefaultColumnFormat<ApiRecordDto>[]>(
     () =>
       config.fields
-        .filter(
-          (field) => isSuperAdmin || field.key !== "institution_name",
-        )
+        .filter((field) => isSuperAdmin || field.key !== "institution_name")
         .map((field) => ({
           ...field,
           formatter: (_value, record) => {
             const value = readNestedValue(record, field.key);
             if (field.formatter) return field.formatter(value, record);
-            if (value === null || value === undefined || value === "") return "-";
+            if (value === null || value === undefined || value === "")
+              return "-";
             if (field.type === "date")
               return new Date(String(value)).toLocaleString("id-ID");
             if (typeof value === "boolean") return value ? "Ya" : "Tidak";
@@ -624,7 +632,10 @@ export function DefaultModulePage({
                               record.period_type !== "none" ? (
                                 <div className="rounded-lg bg-slate-50 px-2.5 py-2 dark:bg-white/[0.04]">
                                   <span className="block text-[10px] text-zinc-400">
-                                    Batas per {periodTypeLabels[String(record.period_type)] ?? String(record.period_type)}
+                                    Batas per{" "}
+                                    {periodTypeLabels[
+                                      String(record.period_type)
+                                    ] ?? String(record.period_type)}
                                   </span>
                                   <span className="mt-0.5 block font-medium text-slate-700 dark:text-slate-200">
                                     {record.period_limit

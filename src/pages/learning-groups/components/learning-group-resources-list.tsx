@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   BookOpen,
   CirclePlus,
-  Download,
   ExternalLink,
   Eye,
   FileText,
@@ -19,25 +18,58 @@ import type { ApiRecordDto } from "@/lib/dto/api";
 import { fetchLearningResources } from "@/pages/learning-resources/actions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { H5PPlayer } from "@/components/h5p-player";
 
 const typeLabels: Record<string, string> = {
-  file: "File",
-  video: "Video",
-  link: "Tautan",
+  media: "Media",
+  "interactive-media": "Media Interaktif",
 };
 
 const typeStyles: Record<string, string> = {
-  file: "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-900",
-  video:
-    "bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:ring-violet-900",
-  link: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-900",
+  media: "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-900",
+  "interactive-media": "bg-orange-50 text-orange-700 ring-orange-200 dark:bg-orange-950/50 dark:text-orange-300 dark:ring-orange-900",
 };
 
 const typeActionStyles: Record<string, string> = {
-  file: "bg-blue-800 hover:bg-blue-900",
-  video: "bg-violet-700 hover:bg-violet-800",
-  link: "bg-emerald-700 hover:bg-emerald-800",
+  media: "bg-blue-800 hover:bg-blue-900",
+  "interactive-media": "bg-orange-700 hover:bg-orange-800"
 };
+
+function getResourceFileUrl(resource: ApiRecordDto): string {
+  if (resource.file_url) return String(resource.file_url);
+  return getResourceFileUrls(resource)[0] ?? "";
+}
+
+function getResourceFileUrls(resource: ApiRecordDto): string[] {
+  const files = Array.isArray(resource.files)
+    ? resource.files
+    : typeof resource.files === "string"
+      ? (() => {
+          try {
+            const parsed = JSON.parse(resource.files);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        })()
+      : [];
+  return files
+    .map((file) =>
+      typeof file === "string"
+        ? file
+        : file && typeof file === "object" && "url" in file
+          ? String(file.url ?? "")
+          : "",
+    )
+    .filter(Boolean);
+}
+
+function getH5PContentId(resource: ApiRecordDto | null): string {
+  if (!resource || resource.type !== "interactive-media") return "";
+  const fileUrl = getResourceFileUrl(resource);
+  const match = fileUrl.match(/\/h5p\/([^/]+)\/play(?:$|[?#])/);
+  return match?.[1] ?? "";
+}
 
 export function LearningGroupResourcesList({ groupId }: { groupId: string }) {
   const navigate = useNavigate();
@@ -112,7 +144,6 @@ export function LearningGroupResourcesList({ groupId }: { groupId: string }) {
         >
           {resources.map((resource) => {
             const type = String(resource.type ?? "");
-            const fileUrl = String(resource.file_url ?? "");
             return (
               <TableRow key={String(resource.id)}>
                 <TableCell className="px-4 py-3 font-medium">
@@ -148,17 +179,6 @@ export function LearningGroupResourcesList({ groupId }: { groupId: string }) {
                     >
                       <Eye className="size-3.5" />
                     </Button>
-                    {fileUrl ? (
-                      <a
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label="Buka materi"
-                        className="inline-flex size-7 items-center justify-center rounded-md text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40"
-                      >
-                        <ExternalLink className="size-3.5" />
-                      </a>
-                    ) : null}
                   </div>
                 </TableCell>
               </TableRow>
@@ -203,37 +223,28 @@ export function LearningGroupResourcesList({ groupId }: { groupId: string }) {
               selectedResource?.description ?? "Tidak ada deskripsi materi.",
             )}
           </p>
-          {selectedResource?.file_url ? (
-            <a
-              href={String(selectedResource.file_url)}
-              target="_blank"
-              rel="noreferrer"
-              className={`mt-6 flex items-center gap-4 rounded-full px-6 py-3 text-sm font-medium text-white transition-colors ${typeActionStyles[String(selectedResource.type ?? "file")] ?? typeActionStyles.file}`}
-            >
-              {selectedResource.type === "video" ? (
-                <Video className="size-5" />
-              ) : selectedResource.type === "link" ? (
-                <Link2 className="size-5" />
-              ) : (
-                <FileText className="size-5" />
-              )}
-              <span className="min-w-0 flex-1 truncate">
-                {String(
-                  selectedResource.file_name ??
-                    selectedResource.title ??
-                    (selectedResource.type === "video"
-                      ? "Buka video"
-                      : selectedResource.type === "link"
-                        ? "Buka tautan"
-                        : "Unduh materi"),
-                )}
-              </span>
-              {selectedResource.type === "file" ? (
-                <Download className="size-5 shrink-0" />
-              ) : (
-                <ExternalLink className="size-5 shrink-0" />
-              )}
-            </a>
+          {getH5PContentId(selectedResource) ? (
+            <div className="mt-6">
+              <H5PPlayer contentId={getH5PContentId(selectedResource)} />
+            </div>
+          ) : getResourceFileUrls(selectedResource ?? {}).length > 0 ? (
+            <div className="mt-6 grid gap-2">
+              {getResourceFileUrls(selectedResource ?? {}).map((fileUrl) => (
+                <a
+                  key={fileUrl}
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`flex min-w-0 items-center gap-4 rounded-full px-6 py-3 text-sm font-medium text-white transition-colors ${typeActionStyles[String(selectedResource?.type ?? "file")] ?? typeActionStyles.file}`}
+                >
+                  <FileText className="size-5 shrink-0" />
+                  <span className="min-w-0 flex-1 truncate">
+                    {fileUrl.split("/").pop() || fileUrl}
+                  </span>
+                  <ExternalLink className="size-5 shrink-0" />
+                </a>
+              ))}
+            </div>
           ) : null}
         </DialogContent>
       </Dialog>

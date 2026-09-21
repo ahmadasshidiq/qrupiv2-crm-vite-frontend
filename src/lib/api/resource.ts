@@ -55,8 +55,11 @@ export async function updateResource(
     ? Object.entries(values).reduce((form, [key, value]) => {
         if (Array.isArray(value)) {
           value.forEach((item) => {
-            if (item !== "" && item !== undefined && item !== null)
+            if (item instanceof File) {
+              if (item.size > 0) form.append(key, item);
+            } else if (item !== "" && item !== undefined && item !== null) {
               form.append(key, String(item));
+            }
           });
         } else if (value instanceof File) {
           if (value.size > 0) form.append(key, value);
@@ -79,23 +82,83 @@ export async function createResource(
   values: Record<string, unknown>,
   multipart = false,
 ) {
-  const body = multipart
-    ? Object.entries(values).reduce((form, [key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach((item) => {
-            if (item !== "" && item !== undefined && item !== null)
-              form.append(key, String(item));
-          });
-        } else if (value instanceof File) {
-          if (value.size > 0) form.append(key, value);
-        } else if (value !== "" && value !== undefined && value !== null) {
-          form.append(key, String(value));
+  let body: Record<string, unknown> | FormData = values;
+
+  if (multipart) {
+    const formData = new FormData();
+
+    Object.entries(values).forEach(([key, value]) => {
+      // Skip empty values
+      if (value === "" || value === undefined || value === null) {
+        return;
+      }
+
+      // Single File
+      if (value instanceof File) {
+        if (value.size > 0) {
+          formData.append(key, value, value.name);
         }
-        return form;
-      }, new FormData())
-    : values;
-  const response = await apiRequest(endpoint, { method: "POST", body });
+        return;
+      }
+
+      // FileList
+      if (value instanceof FileList) {
+        Array.from(value).forEach((file) => {
+          if (file.size > 0) {
+            formData.append(key, file, file.name);
+          }
+        });
+        return;
+      }
+
+      // Array: string[], File[], dll
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          if (item === "" || item === undefined || item === null) {
+            return;
+          }
+
+          if (item instanceof File) {
+            if (item.size > 0) {
+              formData.append(key, item, item.name);
+            }
+            return;
+          }
+
+          // Jangan stringify object sembarangan
+          if (
+            typeof item === "string" ||
+            typeof item === "number" ||
+            typeof item === "boolean"
+          ) {
+            formData.append(key, String(item));
+          }
+        });
+
+        return;
+      }
+
+      // Primitive values
+      if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean"
+      ) {
+        formData.append(key, String(value));
+      }
+    });
+
+    body = formData;
+
+  }
+
+  const response = await apiRequest(endpoint, {
+    method: "POST",
+    body,
+  });
+
   invalidateResourceCache(endpoint);
+
   return response;
 }
 

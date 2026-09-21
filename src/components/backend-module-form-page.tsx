@@ -1,4 +1,4 @@
-import { type ChangeEvent, useEffect, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -6,6 +6,8 @@ import {
   ExternalLink,
   FileText,
   Image,
+  Trash2,
+  UploadCloud,
 } from "lucide-react";
 import {
   type BackendModuleConfig,
@@ -38,12 +40,20 @@ import {
 } from "@/lib/api/resource";
 import type { ApiRecordDto } from "@/lib/dto/api";
 import { toast } from "sonner";
+import { H5PEditor, type H5PEditorHandle } from "@/components/h5p-editor";
 
 type ModuleFormPageProps = {
   config: BackendModuleConfig;
   mode: "create" | "edit" | "view";
   initialValues?: Record<string, string>;
 };
+
+function getH5PContentId(record: ApiRecordDto | null): string {
+  if (!record || record.type !== "interactive-media") return "";
+  const files = Array.isArray(record.files) ? record.files : [];
+  const fileUrl = typeof files[0] === "string" ? files[0] : "";
+  return fileUrl.match(/\/h5p\/([^/]+)\/play(?:$|[?#])/)?.[1] ?? "";
+}
 
 export function BackendModuleFormPage({
   config,
@@ -90,9 +100,7 @@ export function BackendModuleFormPage({
         ? `Edit ${config.title}`
         : `Detail ${config.title}`;
   const quizDefaults =
-    mode === "create" && config.title === "Kuis"
-      ? getQuizDateDefaults()
-      : {};
+    mode === "create" && config.title === "Kuis" ? getQuizDateDefaults() : {};
 
   return (
     <main className="mx-auto w-full max-w-5xl px-5 py-8 sm:px-8 lg:px-10">
@@ -155,33 +163,44 @@ export function BackendModuleFormPage({
               onSubmit={async (values) => {
                 setSaving(true);
                 setErrorMessage(null);
+
                 try {
-                  if (mode === "create")
+                  const payload = config.createPayload
+                    ? config.createPayload(values)
+                    : values;
+
+                  if (mode === "create") {
                     await createResource(
                       config.createEndpoint ?? behavior.endpoint,
-                      config.createPayload
-                        ? config.createPayload(values)
-                        : values,
+                      payload,
                       config.multipart ?? behavior.multipart,
                     );
-                  else if (id)
+                  } else if (id) {
+                    const updatePayload = config.updatePayload
+                      ? config.updatePayload(values)
+                      : values;
+
                     await updateResource(
                       behavior.endpoint,
                       id,
-                      values,
+                      updatePayload,
                       config.multipart ?? behavior.multipart,
                     );
+                  }
+
                   toast.success(
                     mode === "create"
                       ? `${config.title} berhasil ditambahkan.`
                       : `${config.title} berhasil diperbarui.`,
                   );
+
                   navigate(-1);
                 } catch (error) {
                   const message =
                     error instanceof ApiError
                       ? error.message
                       : "Data gagal disimpan.";
+
                   toast.error(message);
                 } finally {
                   setSaving(false);
@@ -203,10 +222,13 @@ function RecordDetails({
   fields: ModuleFormField[];
 }) {
   return (
-    <dl className="grid gap-4 sm:grid-cols-2">
+    <dl className="grid min-w-0 gap-4 sm:grid-cols-2">
       {fields
         .filter((field) => {
           if (field.key === "password" || field.key === "pin") return false;
+          if (field.key === "h5p_editor" || field.key === "h5p_content_id") {
+            return false;
+          }
           if (field.type === "hidden") return field.key === "institution_id";
           if (!field.visibleWhen) return true;
           return field.visibleWhen.values.includes(
@@ -262,10 +284,10 @@ function RecordDetailCard({
         : "";
   const relatedNameKey = field.key.replace(/_id$/, "_name");
   const embeddedName = isInstitution
-    ? record?.institution_name ??
+    ? (record?.institution_name ??
       (record?.institution && typeof record.institution === "object"
         ? (record.institution as ApiRecordDto).name
-        : undefined)
+        : undefined))
     : isRole
       ? record?.role_name
       : record?.[relatedNameKey];
@@ -301,6 +323,26 @@ function RecordDetailCard({
     field.type === "file" && typeof (record?.file_url ?? value) === "string"
       ? String(record?.file_url ?? value)
       : null;
+  const resourceFilePattern =
+    /\.(pdf|docx?|xlsx?|pptx?|zip|csv|txt|jpe?g|png|gif|webp|mp4|webm|mov)(?:$|\?)/i;
+  const resourceFiles =
+    (field.key === "file_url" || field.key === "file") &&
+    Array.isArray(record?.files)
+      ? record.files
+          .map((file) =>
+            typeof file === "string"
+              ? file
+              : file && typeof file === "object" && "url" in file
+                ? String(file.url ?? "")
+                : "",
+          )
+          .filter(Boolean)
+          .filter((file) =>
+            field.key === "file"
+              ? resourceFilePattern.test(file)
+              : !resourceFilePattern.test(file),
+          )
+      : [];
   const isImageFile = field.accept?.startsWith("image/") ?? false;
   const avatarUrl =
     (field.key === "avatar_url" || (field.type === "file" && isImageFile)) &&
@@ -329,30 +371,31 @@ function RecordDetailCard({
         ? resourceName || "-"
         : isResource
           ? resourceName || "-"
-              : field.type === "learning-groups"
-                ? learningGroupNames || "-"
-                : field.type === "quiz-questions"
-                  ? Array.isArray(value)
-                    ? `${value.length} soal`
-                    : "-"
-                  : field.type === "datetime-local"
-                    ? formatDetailDateTime(value)
+          : field.type === "learning-groups"
+            ? learningGroupNames || "-"
+            : field.type === "quiz-questions"
+              ? Array.isArray(value)
+                ? `${value.length} soal`
+                : "-"
+              : field.type === "datetime-local"
+                ? formatDetailDateTime(value)
                 : optionLabel
-              ? optionLabel
-              : field.key === "type"
-                ? (userTypeLabels[String(value ?? "")] ?? String(value ?? "-"))
-                : field.key === "status"
-                  ? value === "active" || value === true
-                    ? "Aktif"
-                    : "Tidak Aktif"
-                  : String(value ?? "-");
+                  ? optionLabel
+                  : field.key === "type"
+                    ? (userTypeLabels[String(value ?? "")] ??
+                      String(value ?? "-"))
+                    : field.key === "status"
+                      ? value === "active" || value === true
+                        ? "Aktif"
+                        : "Tidak Aktif"
+                      : String(value ?? "-");
 
   return (
     <div
-      className={`rounded-xl bg-zinc-50 p-4 dark:bg-white/5 ${field.type === "textarea" || field.type === "learning-groups" ? "sm:col-span-2" : ""}`}
+      className={`min-w-0 max-w-full overflow-hidden rounded-xl bg-zinc-50 p-4 dark:bg-white/5 ${field.type === "textarea" || field.type === "learning-groups" ? "sm:col-span-2" : ""}`}
     >
       <dt className="text-xs text-zinc-500">{label}</dt>
-      <dd className="mt-1 break-words text-sm font-medium">
+      <dd className="mt-1 min-w-0 max-w-full break-words text-sm font-medium">
         {fileUrl && !isImageFile ? (
           <a
             href={fileUrl}
@@ -363,6 +406,25 @@ function RecordDetailCard({
             <FileText className="size-4" /> Buka file{" "}
             <ExternalLink className="size-3.5" />
           </a>
+        ) : resourceFiles.length > 0 ? (
+          <ul className="grid gap-2">
+            {resourceFiles.map((resourceFile) => (
+              <li key={resourceFile}>
+                <a
+                  href={resourceFile}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="box-border flex w-full min-w-0 max-w-full items-center gap-2 overflow-hidden rounded-lg border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60"
+                  title={resourceFile}
+                >
+                  <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                    {resourceFile.split("/").pop() || resourceFile}
+                  </span>
+                  <ExternalLink className="size-3.5 shrink-0" />
+                </a>
+              </li>
+            ))}
+          </ul>
         ) : avatarUrl ? (
           <img
             src={avatarUrl}
@@ -437,7 +499,8 @@ function RecordForm({
     ),
   );
   const [learningGroupIds, setLearningGroupIds] = useState(() => {
-    const value = record?.learning_group_ids ?? initialValues.learning_group_ids;
+    const value =
+      record?.learning_group_ids ?? initialValues.learning_group_ids;
     if (Array.isArray(value)) return value.map(String);
     return value ? [String(value)] : [];
   });
@@ -445,12 +508,19 @@ function RecordForm({
   const isQuizForm = title === "Kuis";
   const [quizDuration, setQuizDuration] = useState(() =>
     isQuizForm
-      ? calculateDurationMinutes(
+      ? (calculateDurationMinutes(
           String(record?.start_time ?? initialValues.start_time ?? ""),
           String(record?.end_time ?? initialValues.end_time ?? ""),
-        ) ?? String(record?.duration_minutes ?? initialValues.duration_minutes ?? "")
+        ) ??
+        String(
+          record?.duration_minutes ?? initialValues.duration_minutes ?? "",
+        ))
       : "",
   );
+  const [h5pContentId, setH5pContentId] = useState(() =>
+    String(record?.h5p_content_id ?? initialValues.h5p_content_id ?? ""),
+  );
+  const h5pEditorRef = useRef<H5PEditorHandle>(null);
 
   const updateRegion = (
     key: "province_code" | "regency_code" | "district_code" | "village_code",
@@ -480,20 +550,63 @@ function RecordForm({
   return (
     <form
       className="grid gap-6 sm:grid-cols-2"
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault();
         const formValues = Object.fromEntries(
           new FormData(event.currentTarget),
+        ) as Record<string, unknown>;
+        const submittedExistingFiles = new FormData(event.currentTarget).getAll(
+          "existing_files",
         );
+        formValues.existing_files = submittedExistingFiles;
+        const submittedResourceUrls = new Set(
+          [
+            ...submittedExistingFiles,
+            ...new FormData(event.currentTarget).getAll("file_url"),
+          ]
+            .map(String)
+            .filter(Boolean),
+        );
+        formValues.old_file_ids = Array.isArray(record?.files)
+          ? record.files
+              .filter(
+                (file) =>
+                  file &&
+                  typeof file === "object" &&
+                  "id" in file &&
+                  "url" in file &&
+                  submittedResourceUrls.has(String(file.url ?? "")),
+              )
+              .map((file) => String(file.id ?? ""))
+              .filter(Boolean)
+          : [];
+        const contentId =
+          selectValues.type === "interactive-media" && !h5pContentId
+            ? await h5pEditorRef.current?.save()
+            : h5pContentId;
+        if (selectValues.type === "interactive-media" && !contentId) {
+          toast.error("Simpan media H5P terlebih dahulu.");
+          return;
+        }
+        formValues.h5p_content_id = contentId ?? "";
         const values = fields.reduce<Record<string, unknown>>(
           (result, field) => {
             const value = formValues[field.key];
             result[field.key] =
               field.type === "learning-groups" ||
-              field.type === "resource-multi"
-                ? new FormData(event.currentTarget)
-                    .getAll(field.key)
-                    .map(String)
+              field.type === "resource-multi" ||
+              field.type === "file-multi" ||
+              field.type === "url-multi"
+                ? (() => {
+                    const fieldValues = new FormData(
+                      event.currentTarget,
+                    ).getAll(field.key);
+                    return field.type === "file-multi"
+                      ? fieldValues.filter(
+                          (item): item is File => item instanceof File,
+                        )
+                      : fieldValues.map(String);
+                  })()
                 : field.type === "quiz-questions" && typeof value === "string"
                   ? JSON.parse(value)
                   : field.type === "number" &&
@@ -512,6 +625,7 @@ function RecordForm({
           },
           {},
         );
+        values.old_file_ids = formValues.old_file_ids;
         void onSubmit(values);
       }}
       onChange={(event) => {
@@ -595,13 +709,36 @@ function RecordForm({
                   : "grid gap-1.5"
               }
             >
-              <Label
-                htmlFor={field.key}
-                className="text-sm text-slate-800 dark:text-slate-100"
-              >
-                {field.label}
-              </Label>
-              {field.type === "role" ? (
+              {field.type === "h5p-editor" ? (
+                <>
+                  <Label
+                    htmlFor={"h5p-editor"}
+                    className="text-sm text-slate-800 dark:text-slate-100"
+                  >
+                    H5P Editor
+                  </Label>
+                  <H5PEditor
+                    ref={h5pEditorRef}
+                    contentId={h5pContentId || getH5PContentId(record) || "new"}
+                    onSaved={(contentId) => {
+                      setH5pContentId(contentId);
+                      toast.success("Media H5P berhasil disimpan.");
+                    }}
+                  />
+                  <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
+                    {guidance.helperText}
+                  </p>
+                </>
+              ) : null}
+              {field.type === "h5p-editor" ? null : (
+                <Label
+                  htmlFor={field.key}
+                  className="text-sm text-slate-800 dark:text-slate-100"
+                >
+                  {field.label}
+                </Label>
+              )}
+              {field.type === "h5p-editor" ? null : field.type === "role" ? (
                 <RoleSelect
                   name={field.key}
                   value={roleId}
@@ -703,6 +840,18 @@ function RecordForm({
                     ))}
                   </SelectContent>
                 </Select>
+              ) : field.type === "file-multi" ? (
+                <MultipleFilesField
+                  field={field}
+                  required={isRequired}
+                  existingFiles={getResourceFiles(record, "file")}
+                />
+              ) : field.type === "url-multi" ? (
+                <MultipleUrlsField
+                  field={field}
+                  required={isRequired}
+                  initialUrls={getResourceFiles(record, "url")}
+                />
               ) : field.type === "file" ? (
                 <FileUploadField
                   field={field}
@@ -761,8 +910,8 @@ function RecordForm({
                     isQuizForm && field.key === "duration_minutes"
                       ? undefined
                       : toInputValue(
-                    record?.[field.key] ?? initialValues[field.key],
-                    field.type,
+                          record?.[field.key] ?? initialValues[field.key],
+                          field.type,
                         )
                   }
                   value={
@@ -775,9 +924,11 @@ function RecordForm({
                   required={isRequired}
                 />
               )}
-              <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
-                {guidance.helperText}
-              </p>
+              {field.type !== "h5p-editor" ? (
+                <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
+                  {guidance.helperText}
+                </p>
+              ) : null}
             </div>
           );
         })}
@@ -882,6 +1033,242 @@ function FileUploadField({
         </span>
       </label>
     </div>
+  );
+}
+
+function MultipleFilesField({
+  field,
+  required,
+  existingFiles = [],
+}: {
+  field: ModuleFormField;
+  required?: boolean;
+  existingFiles?: string[];
+}) {
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [remainingFiles, setRemainingFiles] = useState(existingFiles);
+
+  return (
+    <div className="grid gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 p-4 dark:border-white/15 dark:bg-white/[0.03]">
+      <input
+        id={field.key}
+        name={field.key}
+        type="file"
+        multiple
+        accept={field.accept}
+        className="sr-only"
+        required={required}
+        onChange={(event) =>
+          setSelectedFiles(Array.from(event.target.files ?? []))
+        }
+      />
+
+      <label
+        htmlFor={field.key}
+        className="
+    group flex cursor-pointer items-center gap-4
+    rounded-xl border border-dashed border-slate-300
+    bg-slate-50/50 px-5 py-4
+    transition-all
+    hover:border-blue-400 hover:bg-blue-50/50
+    dark:border-white/15 dark:bg-white/[0.02]
+    dark:hover:border-blue-500/60 dark:hover:bg-blue-950/20
+  "
+      >
+        <div
+          className="
+      flex size-11 shrink-0 items-center justify-center
+      rounded-lg bg-blue-50 text-blue-600
+      transition-colors
+      group-hover:bg-blue-100
+      dark:bg-blue-500/10 dark:text-blue-400
+    "
+        >
+          <UploadCloud className="size-5" />
+        </div>
+
+        <div className="min-w-0 flex-1 text-left">
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            Pilih atau tarik file ke sini
+          </p>
+
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+            Bisa memilih beberapa file sekaligus
+          </p>
+        </div>
+
+        <span
+          className="
+      shrink-0 rounded-lg border border-blue-200
+      bg-blue-50 px-3 py-2
+      text-xs font-medium text-blue-600
+      transition-colors
+      group-hover:bg-blue-100
+      dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400
+    "
+        >
+          Pilih file
+        </span>
+      </label>
+      {existingFiles.length > 0 ? (
+        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs dark:border-white/10 dark:bg-white/[0.03]">
+          <p className="font-medium text-slate-700 dark:text-slate-200">
+            File tersimpan
+          </p>
+          <ul className="mt-1 grid gap-2">
+            {remainingFiles.map((fileUrl) => (
+              <li key={fileUrl} className="flex min-w-0 items-center gap-1">
+                <a
+                  className="min-w-0 flex-1 truncate text-blue-600 hover:underline dark:text-blue-400"
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={fileUrl}
+                >
+                  {fileUrl.split("/").pop() || fileUrl}
+                </a>
+                <input type="hidden" name="existing_files" value={fileUrl} />
+                <a
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Buka file"
+                  title="Buka file"
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-slate-200 text-slate-600 transition-colors hover:bg-slate-100 hover:text-blue-600 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/10"
+                >
+                  <ExternalLink className="size-4" />
+                </a>
+                <a
+                  onClick={() =>
+                    setRemainingFiles((current) =>
+                      current.filter((item) => item !== fileUrl),
+                    )
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Delete"
+                  title="Delete"
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-slate-200 text-red-600 transition-colors hover:bg-slate-100 hover:text-red-600 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/10"
+                >
+                  <Trash2 className="size-4" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {selectedFiles.length > 0 ? (
+        <div className="rounded-lg border border-blue-100 bg-blue-50/70 px-3 py-2 text-xs text-slate-600 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-slate-300">
+          <p className="font-medium text-blue-800 dark:text-blue-200">
+            {selectedFiles.length} file dipilih
+          </p>
+          <ul className="mt-1 grid gap-1">
+            {selectedFiles.map((file) => (
+              <li
+                className="truncate"
+                key={`${file.name}-${file.size}-${file.lastModified}`}
+                title={file.name}
+              >
+                {file.name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function MultipleUrlsField({
+  field,
+  required,
+  initialUrls = [],
+}: {
+  field: ModuleFormField;
+  required?: boolean;
+  initialUrls?: string[];
+}) {
+  const [urls, setUrls] = useState(initialUrls.length > 0 ? initialUrls : [""]);
+  return (
+    <div className="grid gap-2">
+      {urls.map((url, index) => (
+        <div key={`${field.key}-${index}`} className="flex min-w-0 gap-2">
+          <Input
+            name={field.key}
+            type="url"
+            value={url}
+            placeholder="https://..."
+            className="h-10 min-w-0 flex-1 bg-white text-sm dark:bg-white/[0.03]"
+            required={required && index === 0}
+            onChange={(event) =>
+              setUrls((current) =>
+                current.map((item, itemIndex) =>
+                  itemIndex === index ? event.target.value : item,
+                ),
+              )
+            }
+          />
+          {url.trim() ? (
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Buka tautan"
+              title="Buka tautan"
+              className="inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-slate-200 text-slate-600 transition-colors hover:bg-slate-100 hover:text-blue-600 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/10"
+            >
+              <ExternalLink className="size-4" />
+            </a>
+          ) : null}
+          <a
+            onClick={() =>
+              setUrls((current) =>
+                current.length > 1
+                  ? current.filter((_, itemIndex) => itemIndex !== index)
+                  : [""],
+              )
+            }
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Delete"
+            title="Delete"
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-slate-200 text-red-600 transition-colors hover:bg-slate-100 hover:text-red-600 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/10"
+          >
+            <Trash2 className="size-4" />
+          </a>
+        </div>
+      ))}
+      <Button
+        className="rounded-xl border-[#C9DCFF] bg-[#F3F7FF] px-4 text-[#1F4BC1] hover:bg-[#E8F0FF] hover:text-[#1F4BC1]"
+        type="button"
+        variant="outline"
+        onClick={() => setUrls((current) => [...current, ""])}
+      >
+        + Tambah URL
+      </Button>
+    </div>
+  );
+}
+
+function getResourceFiles(
+  record: ApiRecordDto | null,
+  kind: "file" | "url",
+): string[] {
+  const files = Array.isArray(record?.files)
+    ? record.files
+        .map((file) =>
+          typeof file === "string"
+            ? file
+            : file && typeof file === "object" && "url" in file
+              ? String(file.url ?? "")
+              : "",
+        )
+        .filter(Boolean)
+    : [];
+  const filePattern =
+    /\.(pdf|docx?|xlsx?|pptx?|zip|csv|txt|jpe?g|png|gif|webp|mp4|webm|mov)(?:$|\?)/i;
+  return files.filter((file) =>
+    kind === "file" ? filePattern.test(file) : !filePattern.test(file),
   );
 }
 
@@ -995,7 +1382,8 @@ function calculateDurationMinutes(startValue: string, endValue: string) {
   if (!startValue || !endValue) return null;
   const start = new Date(startValue).getTime();
   const end = new Date(endValue).getTime();
-  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null;
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start)
+    return null;
   return Math.round((end - start) / 60000);
 }
 
