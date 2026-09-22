@@ -50,8 +50,14 @@ type ModuleFormPageProps = {
 
 function getH5PContentId(record: ApiRecordDto | null): string {
   if (!record || record.type !== "interactive-media") return "";
+  if (record.h5p_content_id) return String(record.h5p_content_id);
   const files = Array.isArray(record.files) ? record.files : [];
-  const fileUrl = typeof files[0] === "string" ? files[0] : "";
+  const fileUrl =
+    typeof files[0] === "string"
+      ? files[0]
+      : files[0] && typeof files[0] === "object" && "url" in files[0]
+        ? String(files[0].url ?? "")
+        : "";
   return fileUrl.match(/\/h5p\/([^/]+)\/play(?:$|[?#])/)?.[1] ?? "";
 }
 

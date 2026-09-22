@@ -59,11 +59,12 @@ async function getCsrfToken(): Promise<string> {
 
 export const h5pService = {
   getEdit: async (contentId?: string): Promise<IEditorModel> => {
-    // The REST example server uses the literal "undefined" route segment
-    // to represent a new content item.
-    const editId = contentId || "undefined";
+    // New content is loaded from /new. Existing content uses /:id/edit.
+    const isNew = !contentId || contentId === "new" || contentId === "undefined";
     const response = await fetch(
-      `${baseUrl}/${encodeURIComponent(editId)}/edit`,
+      isNew
+        ? `${baseUrl}/new`
+        : `${baseUrl}/${encodeURIComponent(contentId)}/edit`,
       {
         credentials: "include",
       },

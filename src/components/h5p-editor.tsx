@@ -16,10 +16,11 @@ type H5PEditorProps = {
 
 export const H5PEditor = forwardRef<H5PEditorHandle, H5PEditorProps>(
   ({ contentId = "new", onSaved }, ref) => {
+    const editorContentId = contentId || "new";
     const editorRef = useRef<H5PEditorUI>(null);
     const [saving, setSaving] = useState(false);
     const [savedContentId, setSavedContentId] = useState(
-      contentId !== "new" ? contentId : "",
+      editorContentId !== "new" ? editorContentId : "",
     );
     const saveEditor = async () => {
       setSaving(true);
@@ -47,7 +48,7 @@ export const H5PEditor = forwardRef<H5PEditorHandle, H5PEditorProps>(
       <div className="w-full overflow-x-auto rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-950 sm:p-5">
         <H5PEditorUI
           ref={editorRef}
-          contentId={contentId}
+          contentId={editorContentId}
           loadContentCallback={h5pService.getEdit}
           saveContentCallback={h5pService.save}
           onSaved={(newContentId) => {
