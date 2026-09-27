@@ -10,6 +10,7 @@ export type AuthUserDto = {
   email: string;
   avatar_url?: string | null;
   type?: "student" | "teacher" | "admin" | "staff" | string;
+  permissions?: Array<{ model: string; action: string }>;
   role:
     | string
     | {

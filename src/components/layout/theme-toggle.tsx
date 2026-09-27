@@ -15,7 +15,7 @@ export function ThemeToggle() {
       aria-label={isDark ? "Gunakan mode terang" : "Gunakan mode gelap"}
     >
       <span
-        className={`grid size-8 shrink-0 place-items-center rounded-lg ${isDark ? "bg-amber-50 text-amber-600" : "bg-indigo-50 text-indigo-600"}`}
+        className={`grid size-8 shrink-0 place-items-center rounded-lg ${isDark ? "bg-white/[0.04] text-amber-200/80" : "bg-indigo-50 text-indigo-600"}`}
       >
         {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
       </span>

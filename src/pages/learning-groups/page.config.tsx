@@ -78,6 +78,7 @@ export const LEARNING_GROUPS_PAGE_CONFIG: BackendModuleConfig = {
   },
   detailRenderer: (group) =>
     group.id ? <LearningGroupDetailTabs groupId={String(group.id)} /> : null,
+  appendDetailRenderer: true,
   fields: [
     { key: "institution_name", title: "Institusi" },
     { key: "name", title: "Nama grup" },

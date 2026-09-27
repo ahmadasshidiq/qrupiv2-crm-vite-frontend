@@ -104,17 +104,16 @@ export const USERS_PAGE_CONFIG: BackendModuleConfig = {
       key: "avatar_url",
       title: "Foto",
       formatter: (value) => {
-        const avatarUrl =
-          typeof value === "string" && value.trim() && value !== "-"
-            ? value
-            : qrupiLogo;
+        const hasAvatar =
+          typeof value === "string" && value.trim() && value !== "-";
+        const avatarUrl = hasAvatar ? value : qrupiLogo;
 
         return (
-          <span className="flex size-11 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-1.5 dark:border-white/10 dark:bg-white/[0.04]">
+          <span className="flex size-11 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.04]">
             <img
               src={avatarUrl}
               alt="Foto profil pengguna"
-              className="size-full object-contain"
+              className={`size-full ${hasAvatar ? "object-cover" : "object-contain"}`}
               onError={(event) => {
                 event.currentTarget.onerror = null;
                 event.currentTarget.src = qrupiLogo;
@@ -130,6 +129,39 @@ export const USERS_PAGE_CONFIG: BackendModuleConfig = {
     { key: "email", title: "Email" },
     { key: "barcode", title: "Barcode" },
     { key: "institution_name", title: "Institusi" },
+    {
+      key: "type",
+      title: "Tipe",
+      formatter: (value) => {
+        const types: Record<string, { label: string; className: string }> = {
+          teacher: {
+            label: "Guru",
+            className:
+              "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-900",
+          },
+          admin: {
+            label: "Admin",
+            className:
+              "bg-purple-50 text-purple-700 ring-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:ring-purple-900",
+          },
+          student: {
+            label: "Siswa",
+            className:
+              "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-900",
+          },
+        };
+
+        const type = types[String(value)] ?? {
+          label: "Tidak diketahui",
+          className:
+            "bg-zinc-100 text-zinc-600 ring-zinc-200 dark:bg-white/10 dark:text-zinc-300 dark:ring-white/10",
+        };
+
+        return (
+          <Badge className={`px-4 py-0 ${type.className}`}>{type.label}</Badge>
+        );
+      },
+    },
     {
       key: "status",
       title: "Status",

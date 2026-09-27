@@ -1,0 +1,4 @@
+export type DashboardSummaryDto = { scope?: string; region_level?: string; total_users: number; total_institutions: number; total_learning_groups: number; total_learning_group_members: number; total_activities: number; total_quiz_sessions: number; total_attendance_logs: number; total_teachers?: number; total_students?: number; quiz_rankings_available: boolean };
+export type DashboardRankingDto = { rank: number; user_id: string; name: string; score: number };
+export type DashboardAlertDto = { type: string; severity: string; data?: { id?: string; title?: string; status?: string } };
+export type DashboardResponseDto = { status: string; message: string; data: { role: string; role_label?: string; cached: boolean; generated_at: string; summary: DashboardSummaryDto; rankings?: DashboardRankingDto[]; alerts?: DashboardAlertDto[]; data?: Record<string, unknown> } };

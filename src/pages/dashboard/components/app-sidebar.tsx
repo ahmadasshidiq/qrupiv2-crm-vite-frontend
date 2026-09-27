@@ -21,9 +21,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
-import { INSIGHT_NAVIGATION, MAIN_NAVIGATION } from "../page.config";
+import {
+  ADMINISTRATION_NAVIGATION,
+  INSIGHT_NAVIGATION,
+  MAIN_NAVIGATION,
+} from "../page.config";
 import type { NavigationItem } from "../types";
-import { getAuthUser, getRoleName, clearSession } from "@/lib/auth/session";
+import { canReadModel, getAuthUser, getRoleName, clearSession } from "@/lib/auth/session";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 
@@ -31,9 +35,14 @@ export function AppSidebar() {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const navigate = useNavigate();
-  const isSelfAttendance = ["teacher", "staff"].includes(
-    String(getAuthUser()?.type ?? "").toLowerCase(),
-  );
+  const authUser = getAuthUser();
+  const userIdentity = `${authUser?.type ?? ""} ${getRoleName(authUser)}`.toLowerCase();
+  const isSelfAttendance =
+    userIdentity.includes("teacher") ||
+    userIdentity.includes("instructor") ||
+    userIdentity.includes("instruktur") ||
+    userIdentity.includes("guru") ||
+    userIdentity.includes("staff");
   const insightNavigation = INSIGHT_NAVIGATION.map((item) =>
     item.label === "Absensi"
       ? {
@@ -84,6 +93,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2 py-4 group-data-[collapsible=icon]:px-0">
         <NavigationGroup label="Workspace" items={MAIN_NAVIGATION} />
         <NavigationGroup label="Insight & sistem" items={insightNavigation} />
+        <NavigationGroup label="Administrasi" items={ADMINISTRATION_NAVIGATION} />
       </SidebarContent>
       <SidebarFooter className="border-t border-zinc-200/70 p-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0 dark:border-white/10">
         <ThemeToggle />
@@ -113,17 +123,27 @@ function NavigationGroup({
 }) {
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
-  const { state, isMobile } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
+  const closeMobileSidebar = () => {
+    if (isMobile) setOpenMobile(false);
+  };
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
     {},
   );
   const currentHref = `${pathname}${search}`;
-  const role = getRoleName(getAuthUser());
-  const visibleItems = items.filter(
-    (item) =>
-      !item.roles ||
-      item.roles.some((allowedRole) => role.includes(allowedRole)),
-  );
+  const visibleItems = items
+    .map((item) => ({
+      ...item,
+      children: item.children?.filter(
+        (child) => child.href.endsWith("/me") || canReadModel(modelFromHref(child.href)),
+      ),
+    }))
+    .filter(
+      (item) =>
+        modelFromHref(item.href) === "dashboard" ||
+        canReadModel(modelFromHref(item.href)) ||
+        Boolean(item.children?.length),
+    );
 
   if (visibleItems.length === 0) return null;
 
@@ -169,6 +189,7 @@ function NavigationGroup({
                   ) : (
                     <SidebarMenuButton
                       render={<Link to={href} />}
+                      onClick={closeMobileSidebar}
                       isActive={href === currentHref || href === pathname}
                       tooltip={itemLabel}
                       className="h-10 rounded-xl px-3 data-[active=true]:bg-blue-50 data-[active=true]:text-blue-700 dark:data-[active=true]:bg-blue-950/50 dark:data-[active=true]:text-blue-300"
@@ -193,6 +214,7 @@ function NavigationGroup({
                           <SidebarMenuSubItem key={childHref}>
                             <SidebarMenuSubButton
                               render={<Link to={childHref} />}
+                              onClick={closeMobileSidebar}
                               isActive={childHref === currentHref}
                               className="h-9 rounded-lg data-[active=true]:bg-blue-50 data-[active=true]:text-blue-700 dark:data-[active=true]:bg-blue-950/50 dark:data-[active=true]:text-blue-300"
                             >
@@ -212,4 +234,21 @@ function NavigationGroup({
       </SidebarGroupContent>
     </SidebarGroup>
   );
+}
+
+function modelFromHref(href: string) {
+  const path = href.split("?")[0].replace(/^\//, "");
+  const aliases: Record<string, string> = {
+    activities: "activities",
+    "activity-items": "activity-items",
+    attendances: "attendance-logs",
+    "learning-groups": "learning-groups",
+    "learning-resources": "learning-resources",
+    quizzes: "quizzes",
+    "quiz-sessions": "quiz-sessions",
+    institutions: "institutions",
+    users: "users",
+    roles: "roles",
+  };
+  return aliases[path] ?? path;
 }

@@ -87,6 +87,17 @@ export async function login(
           ? rawUser.avatar_url
           : null,
     type: typeof rawUser.type === "string" ? rawUser.type : undefined,
+    permissions: Array.isArray(rawUser.permissions)
+      ? rawUser.permissions.filter(
+          (permission): permission is { model: string; action: string } =>
+            Boolean(
+              permission &&
+                typeof permission === "object" &&
+                typeof (permission as Record<string, unknown>).model === "string" &&
+                typeof (permission as Record<string, unknown>).action === "string",
+            ),
+        )
+      : undefined,
     role,
     institution,
   };

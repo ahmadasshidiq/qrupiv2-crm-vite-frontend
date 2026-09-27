@@ -37,6 +37,18 @@ const MODULE_BEHAVIORS: Record<string, ModuleBehavior> = {
     fields: [
       { key: "name", label: "Nama role" },
       { key: "description", label: "Deskripsi" },
+      { key: "permissions", label: "Akses Izin", type: "permissions", fullWidth: true },
+    ],
+  },
+  "Dokumen Legal": {
+    endpoint: "/legal-documents",
+    fields: [
+      { key: "slug", label: "Jenis dokumen" },
+      { key: "title", label: "Judul" },
+      { key: "version", label: "Versi" },
+      { key: "status", label: "Status" },
+      { key: "effective_date", label: "Tanggal berlaku", type: "datetime-local" },
+      { key: "content", label: "Isi dokumen", type: "textarea" },
     ],
   },
   "Grup Pembelajaran": {

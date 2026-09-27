@@ -60,10 +60,16 @@ export function canAccessCrm(user: AuthUserDto | null) {
 }
 
 export function hasPermission(model: string, action: string) {
-  const role = getAuthUser()?.role;
-  if (!role || typeof role === "string" || !role.permissions?.length)
-    return true;
-  return role.permissions.some(
+  const user = getAuthUser();
+  const role = user?.role;
+  const permissions = user?.permissions ??
+    (role && typeof role !== "string" ? role.permissions : undefined);
+  if (!permissions) return false;
+  return permissions.some(
     (permission) => permission.model === model && permission.action === action,
   );
+}
+
+export function canReadModel(model: string) {
+  return hasPermission(model, "get") || hasPermission(model, "get-all");
 }

@@ -213,12 +213,12 @@ export function SelfAttendanceActions({
   const isAttendanceToday = useCallback(
     (record: ApiRecordDto) =>
       isToday(
-        record.created_at ??
-          record.updated_at ??
-          record.check_in_at ??
-          record.attendance_date ??
+        record.attendance_date ??
           record.check_in_date ??
-          record.date,
+          record.check_in_at ??
+          record.date ??
+          record.created_at ??
+          record.updated_at,
       ),
     [isToday],
   );
@@ -355,6 +355,7 @@ export function SelfAttendanceActions({
         import: false,
         export: false,
       },
+      allowToolbarActionsWithoutCreate: true,
       toolbarActions: [
         ...(!todayLog
           ? [

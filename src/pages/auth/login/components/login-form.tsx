@@ -5,7 +5,6 @@ import {
   Eye,
   EyeOff,
   GraduationCap,
-  UsersRound,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,16 +18,17 @@ type LoginFormProps = {
 
 const QRUPI_APPS = [
   {
-    label: "Qrupi Guru",
+    label: "Qrupi Instruktur",
+    description: "Untuk Guru, Dosen, dan Pengajar",
     url: import.meta.env.VITE_QRUPI_GURU_URL,
     icon: GraduationCap,
   },
   {
-    label: "Qrupi Orang Tua",
-    url: import.meta.env.VITE_QRUPI_ORANG_TUA_URL,
-    icon: UsersRound,
+    label: "Qrupi Pelajar",
+    description: "Untuk Siswa, Mahasiswa, dan Murid",
+    url: import.meta.env.VITE_QRUPI_LMS_URL,
+    icon: BookOpen,
   },
-  { label: "LMS", url: import.meta.env.VITE_QRUPI_LMS_URL, icon: BookOpen },
 ];
 
 export function LoginForm({ status, onSubmit }: LoginFormProps) {
@@ -50,8 +50,8 @@ export function LoginForm({ status, onSubmit }: LoginFormProps) {
       <p className="mb-3 text-center text-[10px] text-zinc-500 sm:text-xs">
         Buka aplikasi Qrupi lainnya
       </p>
-      <div className="grid grid-cols-3 gap-2">
-        {QRUPI_APPS.map(({ label, url, icon: Icon }) => (
+      <div className="grid grid-cols-2 gap-2">
+        {QRUPI_APPS.map(({ label, description, url, icon: Icon }) => (
           <a
             key={label}
             href={url ?? "#"}
@@ -66,6 +66,9 @@ export function LoginForm({ status, onSubmit }: LoginFormProps) {
               <ExternalLink className="absolute -top-1 -right-1 size-2.5 opacity-0 transition-opacity group-hover:opacity-100" />
             </span>
             {label}
+            <span className="text-[8px] text-zinc-500 dark:text-zinc-400 sm:text-[9px]">
+              {description}
+            </span>
           </a>
         ))}
       </div>
@@ -82,7 +85,7 @@ export function LoginForm({ status, onSubmit }: LoginFormProps) {
           autoComplete="email"
           required
           disabled={isSubmitting}
-          className="h-12 rounded-xl border-0 bg-zinc-100 px-4 text-xs shadow-none placeholder:text-zinc-400 sm:text-sm dark:bg-zinc-900"
+          className="h-12 rounded-xl border-0 bg-zinc-100 px-4 text-xs shadow-none placeholder:text-zinc-400 sm:text-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-blue-950/30"
         />
         <div className="relative">
           <Input
@@ -93,7 +96,7 @@ export function LoginForm({ status, onSubmit }: LoginFormProps) {
             minLength={6}
             required
             disabled={isSubmitting}
-            className="h-12 rounded-xl border-0 bg-zinc-100 px-4 pr-12 text-xs shadow-none placeholder:text-zinc-400 sm:text-sm dark:bg-zinc-900"
+            className="h-12 rounded-xl border-0 bg-zinc-100 px-4 pr-12 text-xs shadow-none placeholder:text-zinc-400 sm:text-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-blue-950/30"
           />
           <Button
             type="button"

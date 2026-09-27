@@ -14,6 +14,7 @@ import {
   ChartNoAxesCombined,
   PlusCircle,
   SquareActivity,
+  FileText,
 } from "lucide-react";
 import type { NavigationItem, SearchSuggestion } from "./types";
 
@@ -78,10 +79,19 @@ export const INSIGHT_NAVIGATION: NavigationItem[] = [
       },
     ],
   },
+];
+
+export const ADMINISTRATION_NAVIGATION: NavigationItem[] = [
   {
     label: "Role & Izin",
     href: "/roles",
     icon: ShieldCheck,
+    roles: ["super_admin"],
+  },
+  {
+    label: "Dokumen Legal",
+    href: "/legal-documents",
+    icon: FileText,
     roles: ["super_admin"],
   },
 ];

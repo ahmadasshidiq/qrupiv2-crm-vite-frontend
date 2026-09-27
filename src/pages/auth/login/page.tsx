@@ -5,7 +5,8 @@ import { LoginShowcase } from "./components/login-showcase";
 import { login, persistSession } from "./actions";
 import type { LoginFormValues, LoginStatus } from "./types";
 import qrupiLogo from "@/assets/qrupi-logo.png";
-import { useLocation, useNavigate } from "react-router-dom";
+import qrupiLogoWhite from "@/assets/qrupi-logo-white.png";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { canAccessCrm, clearSession } from "@/lib/auth/session";
 
 export default function LoginPage() {
@@ -48,7 +49,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-svh bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 lg:grid-cols-2">
+    <main className="grid min-h-svh bg-white text-zinc-950 dark:bg-[#0b1928] dark:text-zinc-50 lg:grid-cols-2">
       <section
         className="flex min-h-svh items-center justify-center px-6 py-12 sm:px-12"
         aria-labelledby="login-title"
@@ -57,7 +58,12 @@ export default function LoginPage() {
           <img
             src={qrupiLogo}
             alt="Qrupi — QR untuk pelajar Indonesia"
-            className="mx-auto mb-10 h-auto w-24 object-contain sm:w-28"
+            className="mx-auto mb-10 h-auto w-24 object-contain sm:w-28 dark:hidden"
+          />
+          <img
+            src={qrupiLogoWhite}
+            alt="Qrupi — QR untuk pelajar Indonesia"
+            className="mx-auto mb-10 hidden h-auto w-24 object-contain sm:w-28 dark:block"
           />
           <h1
             id="login-title"
@@ -74,19 +80,19 @@ export default function LoginPage() {
           />
           <p className="mt-4 text-center text-[9px] leading-4 text-zinc-500 sm:text-[11px] sm:leading-5">
             Dengan melanjutkan, Anda menyetujui{" "}
-            <a
+            <Link
               className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-white"
-              href="#terms"
+              to="/terms"
             >
               Ketentuan Layanan
-            </a>{" "}
+            </Link>{" "}
             dan{" "}
-            <a
+            <Link
               className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-white"
-              href="#privacy"
+              to="/privacy"
             >
               Kebijakan Privasi
-            </a>
+            </Link>
             .
           </p>
         </div>

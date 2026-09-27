@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import DynamicPage, {
   type DefaultColumnFormat,
 } from "@/components/dynamic-page";
@@ -60,6 +60,7 @@ export type BackendModuleConfig = {
     icon?: LucideIcon;
     className?: string;
   }>;
+  allowToolbarActionsWithoutCreate?: boolean;
   headerAction?: {
     label: string;
     icon?: LucideIcon;
@@ -69,6 +70,7 @@ export type BackendModuleConfig = {
   backLabel?: string;
   display?: "table" | "cards";
   detailRenderer?: (record: ApiRecordDto) => ReactNode;
+  appendDetailRenderer?: boolean;
   renderRowActions?: (record: ApiRecordDto) => ReactNode;
   editableFields?: ModuleFormField[];
   multipart?: boolean;
@@ -107,6 +109,7 @@ export type ModuleFormField = {
     | "password"
     | "datetime-local"
     | "textarea"
+    | "rich-text"
     | "file"
     | "file-multi"
     | "url-multi"
@@ -118,6 +121,7 @@ export type ModuleFormField = {
     | "learning-groups"
     | "quiz-questions"
     | "h5p-editor"
+    | "permissions"
     | "hidden";
   placeholder?: string;
   helperText?: string;
@@ -311,7 +315,7 @@ function ModuleFilterPanel({
   );
 }
 
-export function DefaultModulePage({
+function DefaultModulePageContent({
   config,
   fetchPage,
   onToolbarAction,
@@ -413,7 +417,7 @@ export function DefaultModulePage({
           <h2 className="text-xl font-bold tracking-tight">{config.title}</h2>
           <p className="mt-1 text-xs text-zinc-500">{config.description}</p>
         </div>
-        {config.headerAction && (onHeaderAction || config.headerAction.href) ? (
+        {config.headerAction && canCreate && (onHeaderAction || config.headerAction.href) ? (
           <Button
             className="h-10 px-4"
             variant="outline"
@@ -437,7 +441,9 @@ export function DefaultModulePage({
         toolbar={
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
-              {config.toolbarActions?.map((action) => (
+              {config.toolbarActions
+                ?.filter(() => canCreate || config.allowToolbarActionsWithoutCreate)
+                .map((action) => (
                 <Button
                   className={`p-4 ${action.className ?? ""}`}
                   key={action.href}
@@ -674,7 +680,7 @@ export function DefaultModulePage({
                                   className="text-violet-600"
                                   onClick={() =>
                                     navigate(
-                                      `${location.pathname}/${record.id}/edit`,
+                                      `${location.pathname}/${record.id}/edit${location.search}`,
                                     )
                                   }
                                 >
@@ -743,7 +749,7 @@ export function DefaultModulePage({
                 className="text-violet-600 hover:bg-violet-50 hover:text-violet-700 dark:text-violet-400 dark:hover:bg-violet-950/40"
                 aria-label="Edit data"
                 onClick={() =>
-                  navigate(`${location.pathname}/${record.id}/edit`)
+                  navigate(`${location.pathname}/${record.id}/edit${location.search}`)
                 }
               >
                 <SquarePen className="size-3.5" />
@@ -869,4 +875,13 @@ export function DefaultModulePage({
       setSaving(false);
     }
   }
+}
+
+export function DefaultModulePage(props: DefaultModulePageProps) {
+  const behavior = getModuleBehavior(props.config);
+  const model = behavior.endpoint.slice(1);
+  if (!hasPermission(model, "get") && !hasPermission(model, "get-all")) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <DefaultModulePageContent {...props} />;
 }

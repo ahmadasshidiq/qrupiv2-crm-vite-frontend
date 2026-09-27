@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import type { BackendModuleConfig } from "@/components/backend-module-page";
 import { Badge } from "@/components/ui/badge";
 import { truncateDescription } from "@/lib/helper/text";
@@ -31,6 +32,32 @@ function getResourcePayloadValues(values: Record<string, unknown>) {
       ([key]) => !RESOURCE_FORM_ONLY_FIELDS.has(key),
     ),
   );
+}
+
+function formatResourceDate(value: unknown) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(new Date(String(value)));
+}
+
+function LearningResourceDetails({ record }: { record: ApiRecordDto }) {
+  const groups = Array.isArray(record.learning_groups) ? record.learning_groups : [];
+  const uploader = record.uploaded_user as ApiRecordDto | undefined;
+  const files = Array.isArray(record.files) ? record.files : [];
+  const type = String(record.type ?? "");
+  const typeLabel = type === "interactive-media" ? "Media Interaktif" : "Media";
+  const contentId = getH5PContentId(record);
+  const groupNames = groups.map((group) => String((group as ApiRecordDto).name ?? "")).filter(Boolean).join(", ");
+  const cards = [["Judul materi", record.title], ["Tipe materi", typeLabel], ["Grup penerima", groupNames], ["Deskripsi", record.description]];
+  void uploader;
+  void files;
+  return <div className="space-y-6"><div className="grid gap-4 sm:grid-cols-2">{cards.map(([label, value], index) => <div key={String(label)} className={`rounded-xl bg-zinc-50 p-4 dark:bg-white/5 ${index > 1 ? "sm:col-span-2" : ""}`}><dt className="text-xs text-zinc-500">{String(label)}</dt><dd className="mt-1 break-words text-sm font-medium">{String(value ?? "-")}</dd></div>)}</div>{contentId ? <section className="grid gap-2 rounded-lg border border-orange-200 bg-orange-50/60 p-4 dark:border-orange-900/50 dark:bg-orange-950/20"><h3 className="text-sm font-semibold text-orange-900 dark:text-orange-200">Preview media interaktif</h3><H5PPlayer contentId={contentId} /></section> : null}</div>;
+  return <div className="space-y-6">
+    <section><h3 className="mb-3 text-base font-semibold">Informasi Materi</h3><dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {[["Judul", record.title], ["Tipe", typeLabel], ["Pengunggah", uploader?.name ?? record.uploaded_user_name], ["Email pengunggah", uploader?.email], ["Grup penerima", groups.length ? groups.map((group) => String((group as ApiRecordDto).name ?? "")).filter(Boolean).join(", ") : record.learning_group_names], ["Dibuat", formatResourceDate(record.created_at)], ["Diperbarui", formatResourceDate(record.updated_at)]].map(([label, value]) => <div key={String(label)} className="rounded-xl bg-zinc-50 p-4 dark:bg-white/5"><dt className="text-xs text-zinc-500">{String(label)}</dt><dd className="mt-1 break-words text-sm font-medium">{String(value ?? "-")}</dd></div>)}
+    </dl><p className="mt-3 rounded-xl bg-zinc-50 p-4 text-sm text-zinc-700 dark:bg-white/5 dark:text-zinc-300">{String(record.description ?? "Tidak ada deskripsi.")}</p></section>
+    {files.length ? <section><h3 className="mb-3 text-base font-semibold">File atau Tautan Materi</h3><div className="grid gap-2">{files.map((file, index) => { const item = file && typeof file === "object" ? file as ApiRecordDto : {}; const url = String(item.url ?? file ?? ""); return <a key={index} href={url} target="_blank" rel="noreferrer" className="break-all rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300">{url}</a>; })}</div></section> : null}
+    {contentId ? <section className="grid gap-2 rounded-lg border border-orange-200 bg-orange-50/60 p-4 dark:border-orange-900/50 dark:bg-orange-950/20"><h3 className="text-sm font-semibold text-orange-900 dark:text-orange-200">Preview media interaktif</h3><H5PPlayer contentId={contentId} /></section> : null}
+  </div>;
 }
 
 export const LEARNING_RESOURCES_PAGE_CONFIG: BackendModuleConfig = {
@@ -165,19 +192,10 @@ export const LEARNING_RESOURCES_PAGE_CONFIG: BackendModuleConfig = {
     import: true,
     export: true,
   },
-  detailRenderer: (record) => {
-    const contentId = getH5PContentId(record);
-    if (!contentId) return null;
-
-    return (
-      <section className="grid gap-2 rounded-lg border border-orange-200 bg-orange-50/60 p-4 dark:border-orange-900/50 dark:bg-orange-950/20">
-        <h3 className="text-sm font-semibold text-orange-900 dark:text-orange-200">
-          Preview media interaktif
-        </h3>
-        <H5PPlayer contentId={contentId} />
-      </section>
-    );
-  },
+  detailRenderer: (record) =>
+    record.type === "interactive-media" ? (
+      <LearningResourceDetails record={record} />
+    ) : null,
   fields: [
     {
       key: "learning_group_names",

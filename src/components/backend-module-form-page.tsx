@@ -1,5 +1,5 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   CircleHelp,
@@ -25,7 +25,7 @@ import { ActivityCategorySelect } from "@/components/activity-category-select";
 import { ResourceAutocomplete } from "@/components/resource-autocomplete";
 import { TeacherMultiSelect } from "@/components/teacher-multi-select";
 import { QuizQuestionEditor } from "@/components/quiz-question-editor";
-import { getAuthUser } from "@/lib/auth/session";
+import { getAuthUser, hasPermission } from "@/lib/auth/session";
 import {
   Select,
   SelectContent,
@@ -41,6 +41,8 @@ import {
 import type { ApiRecordDto } from "@/lib/dto/api";
 import { toast } from "sonner";
 import { H5PEditor, type H5PEditorHandle } from "@/components/h5p-editor";
+import { RichTextEditor } from "@/components/rich-text-editor";
+import { PermissionSelector, type Permission } from "@/components/permission-selector";
 
 type ModuleFormPageProps = {
   config: BackendModuleConfig;
@@ -61,7 +63,19 @@ function getH5PContentId(record: ApiRecordDto | null): string {
   return fileUrl.match(/\/h5p\/([^/]+)\/play(?:$|[?#])/)?.[1] ?? "";
 }
 
-export function BackendModuleFormPage({
+function normalizeRichText(value: unknown) {
+  if (typeof value !== "string" || !value) return "";
+  const document = new DOMParser().parseFromString(value, "text/html");
+  document.querySelectorAll("script, style, svg").forEach((node) => node.remove());
+  document.querySelectorAll("*").forEach((node) => {
+    node.removeAttribute("style");
+    node.removeAttribute("class");
+    node.removeAttribute("onclick");
+  });
+  return document.body.innerHTML;
+}
+
+function BackendModuleFormPageContent({
   config,
   mode,
   initialValues: pageInitialValues = {},
@@ -75,6 +89,7 @@ export function BackendModuleFormPage({
   const [loading, setLoading] = useState(mode !== "create");
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (mode === "create" || !id) return;
@@ -105,6 +120,7 @@ export function BackendModuleFormPage({
       : mode === "edit"
         ? `Edit ${config.title}`
         : `Detail ${config.title}`;
+  const customDetails = record ? config.detailRenderer?.(record) : null;
   const quizDefaults =
     mode === "create" && config.title === "Kuis" ? getQuizDateDefaults() : {};
 
@@ -138,11 +154,18 @@ export function BackendModuleFormPage({
         {!loading && !errorMessage ? (
           mode === "view" ? (
             <div className="space-y-6">
-              <RecordDetails record={record} fields={fields} />
-              {record && config.detailRenderer?.(record)}
+              {customDetails && !config.appendDetailRenderer ? (
+                customDetails
+              ) : (
+                <>
+                  <RecordDetails record={record} fields={fields} />
+                  {customDetails}
+                </>
+              )}
             </div>
           ) : (
             <RecordForm
+              key={record?.id ?? "new-record"}
               title={config.title}
               fields={fields}
               record={record}
@@ -220,6 +243,20 @@ export function BackendModuleFormPage({
   );
 }
 
+export function BackendModuleFormPage(props: ModuleFormPageProps) {
+  const model = getModuleBehavior(props.config).endpoint.slice(1);
+  const action = props.mode === "create"
+    ? "create"
+    : props.mode === "edit"
+      ? "update"
+      : "get-by-id";
+  return hasPermission(model, action) ? (
+    <BackendModuleFormPageContent {...props} />
+  ) : (
+    <Navigate to="/dashboard" replace />
+  );
+}
+
 function RecordDetails({
   record,
   fields,
@@ -253,6 +290,18 @@ const userTypeLabels: Record<string, string> = {
   teacher: "Guru",
   admin: "Admin",
   staff: "Staf",
+};
+
+const statusLabels: Record<string, string> = {
+  active: "Aktif",
+  inactive: "Tidak Aktif",
+  submitted: "Dikirim",
+  in_progress: "Sedang Berlangsung",
+  timeout: "Waktu Habis",
+  failed: "Gagal",
+  draft: "Draft",
+  published: "Published",
+  archived: "Archived",
 };
 
 function RecordDetailCard({
@@ -365,6 +414,16 @@ function RecordDetailCard({
   );
   const roleName = String(record?.role_name ?? resolvedName ?? "");
   const resourceName = String(embeddedName ?? resolvedName ?? "");
+  const permissionGroups = field.type === "permissions" && Array.isArray(value)
+    ? value.reduce<Record<string, string[]>>((groups, permission) => {
+        if (!permission || typeof permission !== "object") return groups;
+        const item = permission as Record<string, unknown>;
+        const model = String(item.model ?? "");
+        const action = String(item.action ?? "");
+        if (model && action) groups[model] = [...(groups[model] ?? []), action];
+        return groups;
+      }, {})
+    : {};
   const optionLabel = field.options?.find(
     (option) => String(option.value) === String(value ?? ""),
   )?.label;
@@ -391,31 +450,47 @@ function RecordDetailCard({
                     ? (userTypeLabels[String(value ?? "")] ??
                       String(value ?? "-"))
                     : field.key === "status"
-                      ? value === "active" || value === true
-                        ? "Aktif"
-                        : "Tidak Aktif"
+                      ? typeof value === "boolean"
+                        ? value ? "Aktif" : "Tidak Aktif"
+                        : statusLabels[String(value ?? "").toLowerCase()] ?? String(value ?? "-")
                       : String(value ?? "-");
 
   return (
     <div
-      className={`min-w-0 max-w-full overflow-hidden rounded-xl bg-zinc-50 p-4 dark:bg-white/5 ${field.type === "textarea" || field.type === "learning-groups" ? "sm:col-span-2" : ""}`}
+      className={`min-w-0 max-w-full overflow-hidden rounded-xl bg-zinc-50 p-4 dark:bg-white/5 ${field.type === "textarea" || field.type === "rich-text" || field.type === "learning-groups" || field.type === "permissions" ? "sm:col-span-2" : ""}`}
     >
       <dt className="text-xs text-zinc-500">{label}</dt>
       <dd className="mt-1 min-w-0 max-w-full break-words text-sm font-medium">
-        {fileUrl && !isImageFile ? (
-          <a
-            href={fileUrl}
+        {field.type === "rich-text" ? (
+          <div
+            className="legal-content max-w-none text-sm leading-7 text-zinc-700 dark:text-zinc-300"
+            dangerouslySetInnerHTML={{ __html: normalizeRichText(value) }}
+          />
+        ) : field.type === "permissions" ? (
+          Object.keys(permissionGroups).length > 0 ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {Object.entries(permissionGroups).map(([model, actions]) => (
+                <div key={model} className="rounded-lg border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                  <p className="font-semibold capitalize">{model.replace(/-/g, " ")}</p>
+                  <p className="mt-1 text-xs font-normal text-zinc-500">{actions.join(" · ")}</p>
+                </div>
+              ))}
+            </div>
+          ) : "-"
+        ) : fileUrl && !isImageFile ? (
+            <a
+              href={fileUrl}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60"
           >
-            <FileText className="size-4" /> Buka file{" "}
+            <FileText className="size-4 shrink-0" /> <span className="min-w-0 flex-1 truncate" title={fileUrl}>{fileUrl.split("/").pop() || fileUrl}</span>{" "}
             <ExternalLink className="size-3.5" />
           </a>
         ) : resourceFiles.length > 0 ? (
           <ul className="grid gap-2">
             {resourceFiles.map((resourceFile) => (
-              <li key={resourceFile}>
+              <li key={resourceFile} className="min-w-0">
                 <a
                   href={resourceFile}
                   target="_blank"
@@ -599,7 +674,11 @@ function RecordForm({
           (result, field) => {
             const value = formValues[field.key];
             result[field.key] =
-              field.type === "learning-groups" ||
+              field.type === "permissions"
+                ? new FormData(event.currentTarget).getAll(field.key).flatMap((item) => {
+                    try { return [JSON.parse(String(item)) as Permission]; } catch { return []; }
+                  })
+                : field.type === "learning-groups" ||
               field.type === "resource-multi" ||
               field.type === "file-multi" ||
               field.type === "url-multi"
@@ -710,7 +789,7 @@ function RecordForm({
             <div
               key={field.key}
               className={
-                field.type === "textarea" || field.fullWidth
+                field.type === "textarea" || field.type === "rich-text" || field.fullWidth
                   ? "grid gap-1.5 sm:col-span-2"
                   : "grid gap-1.5"
               }
@@ -744,7 +823,13 @@ function RecordForm({
                   {field.label}
                 </Label>
               )}
-              {field.type === "h5p-editor" ? null : field.type === "role" ? (
+              {field.type === "h5p-editor" ? null : field.type === "permissions" ? (
+                <PermissionSelector
+                  name={field.key}
+                  required={isRequired}
+                  value={Array.isArray(record?.[field.key]) ? record[field.key] as Permission[] : []}
+                />
+              ) : field.type === "role" ? (
                 <RoleSelect
                   name={field.key}
                   value={roleId}
@@ -896,6 +981,8 @@ function RecordForm({
                     updateRegion(field.key as keyof typeof regionCodes, code)
                   }
                 />
+              ) : field.type === "rich-text" ? (
+                <RichTextEditor name={field.key} value={String(record?.[field.key] ?? initialValues[field.key] ?? "")} />
               ) : field.type === "textarea" ? (
                 <Textarea
                   id={field.key}
@@ -1418,5 +1505,7 @@ function normalizeStatus(value: unknown) {
     return "active";
   if (value === false || value === "inactive" || value === "Tidak Aktif")
     return "inactive";
+  if (value === "draft" || value === "published" || value === "archived")
+    return value;
   return undefined;
 }

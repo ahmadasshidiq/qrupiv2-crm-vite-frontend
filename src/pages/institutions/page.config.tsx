@@ -39,17 +39,15 @@ export const INSTITUTIONS_PAGE_CONFIG: BackendModuleConfig = {
       key: "avatar_url",
       title: "Logo",
       formatter: (value) => {
-        const logoUrl =
-          typeof value === "string" && value.trim() && value !== "-"
-            ? value
-            : qrupiLogo;
+        const hasLogo = typeof value === "string" && value.trim() && value !== "-";
+        const logoUrl = hasLogo ? value : qrupiLogo;
 
         return (
-          <span className="flex size-11 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-1.5 dark:border-white/10 dark:bg-white/[0.04]">
+          <span className="flex size-11 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.04]">
             <img
               src={logoUrl}
               alt="Logo institusi"
-              className="size-full object-contain"
+              className={`size-full ${hasLogo ? "object-cover" : "object-contain"}`}
               onError={(event) => {
                 event.currentTarget.onerror = null;
                 event.currentTarget.src = qrupiLogo;
