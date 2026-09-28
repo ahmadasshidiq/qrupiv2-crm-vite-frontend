@@ -154,6 +154,12 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
       points: item.total_points,
     }));
   }, [chartData]);
+  const topTeachers = useMemo(() => {
+    return (chartData?.top_teachers ?? []).slice(0, 5).map((item) => ({
+      name: item.user_name,
+      activities: item.total_activities,
+    }));
+  }, [chartData]);
   const selectCategory = categories.find(
     (item) => item.id === draftFilters.categoryId,
   );
@@ -391,7 +397,7 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
           </div>
         )}
       </section>
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+      <div className="mt-5 grid gap-5 lg:grid-cols-3">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
           <div>
             <h3 className="text-sm font-semibold">
@@ -462,6 +468,37 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
           ) : (
             <div className="flex h-64 items-center justify-center text-sm text-zinc-500">
               Belum ada siswa sesuai filter.
+            </div>
+          )}
+        </section>
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
+          <div>
+            <h3 className="text-sm font-semibold">Top Guru</h3>
+            <p className="mt-1 text-xs text-zinc-500">
+              Guru dengan aktivitas terbanyak sesuai filter.
+            </p>
+          </div>
+          {loading ? (
+            <div className="mt-6 h-64 animate-pulse rounded-xl bg-slate-100 dark:bg-white/10" />
+          ) : topTeachers.length ? (
+            <div className="mt-5 divide-y divide-slate-100 dark:divide-white/10">
+              {topTeachers.map((teacher, index) => (
+                <div key={teacher.name} className="flex items-center gap-3 py-3">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-300">
+                    {index + 1}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                    {teacher.name}
+                  </span>
+                  <span className="text-xs font-semibold text-emerald-600">
+                    {teacher.activities} aktivitas
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex h-64 items-center justify-center text-sm text-zinc-500">
+              Belum ada guru sesuai filter.
             </div>
           )}
         </section>

@@ -29,7 +29,7 @@ export function AppHeader({
   avatarUrl,
 }: AppHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 border-b border-zinc-200/70 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/90">
+    <header className="sticky top-0 z-[1000] border-b border-zinc-200/70 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/90">
       <SidebarTrigger className="absolute top-1/2 left-0 z-40 hidden size-7 -translate-x-1/2 -translate-y-1/2 rounded-full border border-zinc-200 bg-white text-zinc-500 shadow-sm hover:bg-zinc-50 lg:inline-flex dark:border-white/10 dark:bg-zinc-900 dark:hover:bg-zinc-800" />
       <div className="mx-auto grid min-h-20 w-full max-w-[1440px] items-center gap-4 px-5 py-3 sm:px-8 lg:grid-cols-[minmax(260px,1fr)_520px_minmax(220px,1fr)] lg:px-10">
         <div className="flex min-w-0 items-center gap-3">

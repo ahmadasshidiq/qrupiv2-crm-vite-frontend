@@ -8,7 +8,9 @@ export type AuthUserDto = {
   id: string;
   name: string;
   email: string;
+  avatar_profile_url?: string;
   avatar_url?: string | null;
+  token?: string;
   type?: "student" | "teacher" | "admin" | "staff" | string;
   permissions?: Array<{ model: string; action: string }>;
   role:

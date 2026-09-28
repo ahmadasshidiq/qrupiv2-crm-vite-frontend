@@ -9,6 +9,18 @@ function getStringValue(source: Record<string, unknown>, key: string) {
     : undefined;
 }
 
+function getRoleIdFromToken(token: string) {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return undefined;
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(atob(normalized)) as Record<string, unknown>;
+    return typeof decoded.role_id === "string" ? decoded.role_id : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function getInstitutionFromUser(
   rawUser: Record<string, unknown>,
 ): NonNullable<AuthUserDto["institution"]> | null {
@@ -53,10 +65,19 @@ export async function login(
   }
 
   let role: AuthUserDto["role"] =
-    typeof rawUser.role === "string" ? rawUser.role : "";
-  if (typeof rawUser.role === "string" && rawUser.role) {
+    rawUser.role && typeof rawUser.role === "object"
+      ? (rawUser.role as AuthUserDto["role"])
+      : typeof rawUser.role === "string"
+        ? rawUser.role
+        : "";
+  const roleId =
+    (typeof rawUser.role_id === "string" ? rawUser.role_id : undefined) ??
+    (typeof rawUser.role === "string" && rawUser.role
+      ? rawUser.role
+      : getRoleIdFromToken(accessToken));
+  if (roleId) {
     const rolePayload = await apiRequest<{ data?: AuthUserDto["role"] }>(
-      `/roles/${rawUser.role}`,
+      `/roles/${roleId}`,
       {
         authenticated: false,
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -80,6 +101,10 @@ export async function login(
     id: rawUser.id,
     name: rawUser.name,
     email: typeof rawUser.email === "string" ? rawUser.email : "",
+    avatar_profile_url:
+      typeof rawUser.avatar_profile_url === "string"
+        ? rawUser.avatar_profile_url
+        : undefined,
     avatar_url:
       typeof rawUser.avatar_profile_url === "string"
         ? rawUser.avatar_profile_url
@@ -87,6 +112,7 @@ export async function login(
           ? rawUser.avatar_url
           : null,
     type: typeof rawUser.type === "string" ? rawUser.type : undefined,
+    token: typeof rawUser.token === "string" ? rawUser.token : undefined,
     permissions: Array.isArray(rawUser.permissions)
       ? rawUser.permissions.filter(
           (permission): permission is { model: string; action: string } =>

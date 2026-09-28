@@ -27,17 +27,19 @@ const METRIC_META: Record<DashboardMetricKey, { label: string; icon: LucideIcon 
   total_users: { label: "Pengguna", icon: Users },
   total_learning_groups: { label: "Grup Pembelajaran", icon: Layers3 },
   total_learning_group_members: { label: "Anggota kelompok", icon: GraduationCap },
-  total_activities: { label: "Aktivitas", icon: Activity },
   total_quiz_sessions: { label: "Sesi kuis", icon: BookOpen },
+  total_activities: { label: "Aktivitas", icon: Activity },
   total_attendance_logs: { label: "Log kehadiran", icon: CalendarCheck },
 };
 
 export function DashboardMetricCard({
   metricKey,
   value,
+  contextLabel,
 }: {
   metricKey: DashboardMetricKey;
   value: number;
+  contextLabel?: string;
 }) {
   const { label, icon: Icon } = METRIC_META[metricKey];
   return (
@@ -49,8 +51,7 @@ export function DashboardMetricCard({
         <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Total</span>
       </div>
       <p className="mt-3 text-2xl font-bold">{fmt.format(value)}</p>
-      <p className="mt-0.5 text-xs text-zinc-500">{label}</p>
+      <p className="mt-0.5 text-xs text-zinc-500">{label}{contextLabel ? " (Periode)" : ""}</p>
     </div>
   );
 }
-

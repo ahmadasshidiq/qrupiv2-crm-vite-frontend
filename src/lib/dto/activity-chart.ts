@@ -30,6 +30,11 @@ export type ActivityChartResponseDto = {
     total_activities: number;
     total_points: number;
   }>;
+  top_teachers: Array<{
+    user_id: string;
+    user_name: string;
+    total_activities: number;
+  }>;
   daily_trend: Array<{
     date: string;
     positive_activities: number;
@@ -65,6 +70,13 @@ export const ACTIVITY_CHART_RESPONSE_EXAMPLE: ActivityChartResponseDto = {
       user_name: "Ahmad",
       total_activities: 8,
       total_points: 16,
+    },
+  ],
+  top_teachers: [
+    {
+      user_id: "teacher-id",
+      user_name: "Nama Guru",
+      total_activities: 12,
     },
   ],
   daily_trend: [
