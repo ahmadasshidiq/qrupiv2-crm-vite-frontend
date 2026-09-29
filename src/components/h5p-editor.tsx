@@ -48,6 +48,10 @@ export const H5PEditor = forwardRef<H5PEditorHandle, H5PEditorProps>(
       <div className="w-full overflow-x-auto rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-950 sm:p-5">
         <H5PEditorUI
           ref={editorRef}
+          // H5PEditorUI keeps its internal editor state after the initial
+          // mount. Remount it when switching between a new/existing item so
+          // the previous content type cannot leak into the next form.
+          key={editorContentId}
           contentId={editorContentId}
           loadContentCallback={h5pService.getEdit}
           saveContentCallback={h5pService.save}

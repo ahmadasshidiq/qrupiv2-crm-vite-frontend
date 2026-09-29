@@ -714,8 +714,12 @@ function RecordForm({
         void onSubmit(values);
       }}
       onChange={(event) => {
-        if (!isQuizForm) return;
         const target = event.target as unknown as HTMLInputElement;
+        if (target.name === "type" && target.value !== "interactive-media") {
+          setH5pContentId("");
+          return;
+        }
+        if (!isQuizForm) return;
         if (target.name !== "start_time" && target.name !== "end_time") return;
         const formData = new FormData(event.currentTarget);
         const duration = calculateDurationMinutes(
