@@ -124,6 +124,7 @@ export type ModuleFormField = {
     | "permissions"
     | "hidden";
   placeholder?: string;
+  step?: number | "any";
   helperText?: string;
   fullWidth?: boolean;
   accept?: string;

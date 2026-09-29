@@ -20,8 +20,8 @@ export const INSTITUTIONS_PAGE_CONFIG: BackendModuleConfig = {
     { key: "village_code", label: "Kelurahan", type: "region", regionLevel: "village", placeholder: "Pilih kecamatan terlebih dahulu" },
     { key: "zip_code", label: "Kode pos", placeholder: "Contoh: 12140" },
     { key: "country", label: "Negara", placeholder: "Contoh: Indonesia" },
-    { key: "latitude", label: "Latitude", type: "number", placeholder: "Contoh: -6.2088" },
-    { key: "longitude", label: "Longitude", type: "number", placeholder: "Contoh: 106.8456" },
+    { key: "latitude", label: "Latitude", type: "number", step: "any", placeholder: "Contoh: -6.2088" },
+    { key: "longitude", label: "Longitude", type: "number", step: "any", placeholder: "Contoh: 106.8456" },
     { key: "current_subscription_id", label: "ID langganan aktif", placeholder: "Opsional" },
   ],
   actions: {

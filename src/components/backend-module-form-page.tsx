@@ -999,6 +999,7 @@ function RecordForm({
                   type={getInputType(field)}
                   placeholder={guidance.placeholder}
                   className="h-10 bg-white px-3 text-sm dark:bg-white/[0.03]"
+                  step={field.type === "number" ? field.step ?? "any" : undefined}
                   defaultValue={
                     isQuizForm && field.key === "duration_minutes"
                       ? undefined
