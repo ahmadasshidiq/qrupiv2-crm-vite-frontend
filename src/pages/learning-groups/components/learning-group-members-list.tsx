@@ -73,7 +73,7 @@ export function LearningGroupMembersList({ groupId }: { groupId: string }) {
           ...(role === "student"
             ? { "u.type": "student" }
             : { "u.type.in": "teacher,admin" }),
-          ...(search ? { search } : {}),
+          ...(search ? { "u.name.ilike": `%${search}%` } : {}),
         })
           .then((result) => setCandidates(result.items))
           .catch(() => setCandidates([]));
@@ -222,14 +222,14 @@ export function LearningGroupMembersList({ groupId }: { groupId: string }) {
         </div>
       )}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="max-w-xl sm:max-w-xl">
-          <div className="pr-6">
+        <DialogContent className="max-w-xl gap-5 sm:max-w-xl">
+          <div className="space-y-1 pr-6">
             <h3 className="text-base font-semibold">Tambah Anggota Grup</h3>
             <p className="mt-1 text-xs text-zinc-500">
               Cari lalu pilih pengguna yang akan dimasukkan ke grup ini.
             </p>
           </div>
-          <div className="grid gap-1.5">
+          <div className="grid gap-2">
             <Label>Peran dalam grup</Label>
             <Select
               value={role === "student" ? "Siswa" : "Pengajar"}
@@ -247,7 +247,7 @@ export function LearningGroupMembersList({ groupId }: { groupId: string }) {
               </SelectContent>
             </Select>
           </div>
-          <div className="grid gap-1.5">
+          <div className="grid gap-2">
             <Label htmlFor="member-search">Cari pengguna</Label>
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400" />
