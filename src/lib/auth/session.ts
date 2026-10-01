@@ -13,7 +13,7 @@ export function getCookie(name: string) {
 }
 
 export function getCsrfToken() {
-  return getCookie("qrupi_csrf");
+  return getCookie(import.meta.env.VITE_CSRF_COOKIE_NAME ?? "qrupi_csrf");
 }
 
 function getStorageValue(key: string) {
