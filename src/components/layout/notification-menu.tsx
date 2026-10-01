@@ -111,7 +111,7 @@ export function NotificationMenu() {
             <CheckCheck className="mr-1 size-4" /> Tandai semua
           </Button>
         </div>
-        <div className="max-h-[min(70vh,440px)] overflow-y-auto p-2">
+        <div className="max-h-[min(70vh,440px)] space-y-2 overflow-y-auto p-2">
           {loading ? (
             <p className="p-4 text-sm text-zinc-500">Memuat notifikasi...</p>
           ) : null}
