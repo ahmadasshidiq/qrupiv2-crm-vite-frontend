@@ -35,7 +35,7 @@ export default function LoginPage() {
           "Akun siswa tidak memiliki akses ke CRM. Silakan gunakan aplikasi LMS Qrupi.",
         );
       }
-      persistSession(session, values.remember);
+      persistSession(session.user);
       setStatus("success");
       toast.success("Login berhasil.");
       navigate("/dashboard", { replace: true });

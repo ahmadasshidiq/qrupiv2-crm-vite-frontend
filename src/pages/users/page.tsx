@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { DefaultModulePage } from "@/components/backend-module-page";
-import { getAccessToken, getAuthUser, getRoleName } from "@/lib/auth/session";
+import { getAuthUser, getRoleName } from "@/lib/auth/session";
 import { fetchUsers, type UserCategory } from "./actions";
 import { USERS_PAGE_CONFIG } from "./page.config";
 import type { PaginationFilters } from "@/lib/api/paginated";
@@ -71,7 +71,7 @@ export default function UsersPage() {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${getAccessToken() ?? ""}`,
+            credentials: "include",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({

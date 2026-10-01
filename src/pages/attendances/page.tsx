@@ -4,7 +4,7 @@ import { DefaultModulePage } from "@/components/backend-module-page";
 import { LogIn, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { apiRequest } from "@/lib/api/client";
-import { getAccessToken, getAuthUser } from "@/lib/auth/session";
+import { getAuthUser } from "@/lib/auth/session";
 import {
   fetchAttendances,
   fetchMyAttendances,
@@ -124,7 +124,7 @@ function AdminAttendancesPage() {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${getAccessToken() ?? ""}`,
+            credentials: "include",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({

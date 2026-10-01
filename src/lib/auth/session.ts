@@ -1,15 +1,23 @@
-import type { AuthUserDto, LoginResponseDto } from "@/lib/dto/auth";
+import type { AuthUserDto } from "@/lib/dto/auth";
 
-const ACCESS_TOKEN_KEY = "accessToken";
-const REFRESH_TOKEN_KEY = "refreshToken";
 const AUTH_USER_KEY = "authUser";
+
+export function getCookie(name: string) {
+  if (typeof document === "undefined") return null;
+  const prefix = `${encodeURIComponent(name)}=`;
+  const value = document.cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(prefix));
+  return value ? decodeURIComponent(value.slice(prefix.length)) : null;
+}
+
+export function getCsrfToken() {
+  return getCookie("qrupi_csrf");
+}
 
 function getStorageValue(key: string) {
   return sessionStorage.getItem(key) ?? localStorage.getItem(key);
-}
-
-export function getAccessToken() {
-  return getStorageValue(ACCESS_TOKEN_KEY);
 }
 
 export function getAuthUser(): AuthUserDto | null {
@@ -24,19 +32,13 @@ export function getAuthUser(): AuthUserDto | null {
   }
 }
 
-export function persistSession(session: LoginResponseDto, remember: boolean) {
+export function persistSession(user: AuthUserDto) {
   clearSession();
-  const storage = remember ? localStorage : sessionStorage;
-  storage.setItem(ACCESS_TOKEN_KEY, session.accessToken);
-  storage.setItem(AUTH_USER_KEY, JSON.stringify(session.user));
-  if (session.refreshToken)
-    storage.setItem(REFRESH_TOKEN_KEY, session.refreshToken);
+  sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
 }
 
 export function clearSession() {
   for (const storage of [localStorage, sessionStorage]) {
-    storage.removeItem(ACCESS_TOKEN_KEY);
-    storage.removeItem(REFRESH_TOKEN_KEY);
     storage.removeItem(AUTH_USER_KEY);
   }
 }

@@ -10,7 +10,6 @@ export type AuthUserDto = {
   email: string;
   avatar_profile_url?: string;
   avatar_url?: string | null;
-  token?: string;
   type?: "student" | "teacher" | "admin" | "staff" | string;
   permissions?: Array<{ model: string; action: string }>;
   role:
@@ -30,7 +29,5 @@ export type AuthUserDto = {
 };
 
 export type LoginResponseDto = {
-  accessToken: string;
-  refreshToken?: string;
   user: AuthUserDto;
 };

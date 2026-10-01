@@ -28,6 +28,7 @@ import {
 } from "../page.config";
 import type { NavigationItem } from "../types";
 import { canReadModel, getAuthUser, getRoleName, clearSession } from "@/lib/auth/session";
+import { apiRequest } from "@/lib/api/client";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 
@@ -57,9 +58,15 @@ export function AppSidebar() {
       : item,
   );
 
-  function logout() {
-    clearSession();
-    navigate("/login", { replace: true });
+  async function logout() {
+    try {
+      await apiRequest("/auth/logout", { method: "POST" });
+    } catch {
+      // Clear local UI state even when the server session is already expired.
+    } finally {
+      clearSession();
+      navigate("/login", { replace: true });
+    }
   }
 
   return (

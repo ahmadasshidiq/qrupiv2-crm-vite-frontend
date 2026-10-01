@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { DefaultModulePage } from "@/components/backend-module-page";
-import { getAccessToken, getAuthUser } from "@/lib/auth/session";
+import { getAuthUser } from "@/lib/auth/session";
 import { toast } from "sonner";
 import { fetchActivityCategories } from "./actions";
 import { ACTIVITY_CATEGORIES_PAGE_CONFIG } from "./page.config";
@@ -15,7 +15,7 @@ export default function ActivityCategoriesPage() {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${getAccessToken() ?? ""}`,
+            credentials: "include",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({

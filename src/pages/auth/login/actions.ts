@@ -9,18 +9,6 @@ function getStringValue(source: Record<string, unknown>, key: string) {
     : undefined;
 }
 
-function getRoleIdFromToken(token: string) {
-  try {
-    const payload = token.split(".")[1];
-    if (!payload) return undefined;
-    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const decoded = JSON.parse(atob(normalized)) as Record<string, unknown>;
-    return typeof decoded.role_id === "string" ? decoded.role_id : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 function getInstitutionFromUser(
   rawUser: Record<string, unknown>,
 ): NonNullable<AuthUserDto["institution"]> | null {
@@ -49,15 +37,12 @@ export async function login(
   const source = (
     payload.data && typeof payload.data === "object" ? payload.data : payload
   ) as Record<string, unknown>;
-  const accessToken = source.accessToken ?? source.access_token ?? source.token;
-  const refreshToken = source.refreshToken ?? source.refresh_token;
   const rawUser =
     source.user && typeof source.user === "object"
       ? (source.user as Record<string, unknown>)
       : source;
 
   if (
-    typeof accessToken !== "string" ||
     typeof rawUser.id !== "string" ||
     typeof rawUser.name !== "string"
   ) {
@@ -74,13 +59,12 @@ export async function login(
     (typeof rawUser.role_id === "string" ? rawUser.role_id : undefined) ??
     (typeof rawUser.role === "string" && rawUser.role
       ? rawUser.role
-      : getRoleIdFromToken(accessToken));
+      : undefined);
   if (roleId) {
     const rolePayload = await apiRequest<{ data?: AuthUserDto["role"] }>(
       `/roles/${roleId}`,
       {
-        authenticated: false,
-        headers: { Authorization: `Bearer ${accessToken}` },
+        authenticated: true,
       },
     ).catch(() => null);
     role = rolePayload?.data ?? role;
@@ -91,8 +75,7 @@ export async function login(
     const institutionPayload = await apiRequest<{
       data?: NonNullable<AuthUserDto["institution"]>;
     }>(`/institutions/${institution.id}`, {
-      authenticated: false,
-      headers: { Authorization: `Bearer ${accessToken}` },
+      authenticated: true,
     }).catch(() => null);
     institution = institutionPayload?.data ?? institution;
   }
@@ -112,7 +95,6 @@ export async function login(
           ? rawUser.avatar_url
           : null,
     type: typeof rawUser.type === "string" ? rawUser.type : undefined,
-    token: typeof rawUser.token === "string" ? rawUser.token : undefined,
     permissions: Array.isArray(rawUser.permissions)
       ? rawUser.permissions.filter(
           (permission): permission is { model: string; action: string } =>
@@ -129,8 +111,6 @@ export async function login(
   };
 
   return {
-    accessToken,
-    refreshToken: typeof refreshToken === "string" ? refreshToken : undefined,
     user,
   };
 }

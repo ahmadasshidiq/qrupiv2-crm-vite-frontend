@@ -1,4 +1,4 @@
-import { clearSession, getAccessToken } from "@/lib/auth/session";
+import { clearSession, getCsrfToken } from "@/lib/auth/session";
 
 const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1"
@@ -23,11 +23,11 @@ export async function apiRequest<T>(
   options: ApiOptions = {},
 ): Promise<T> {
   const { authenticated = true, body, headers, ...requestOptions } = options;
-  const token = getAccessToken();
   const requestHeaders = new Headers(headers);
-
-  if (authenticated && token)
-    requestHeaders.set("Authorization", `Bearer ${token}`);
+  const method = (requestOptions.method ?? "GET").toUpperCase();
+  if (authenticated && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    requestHeaders.set("X-CSRF-Token", getCsrfToken() ?? "");
+  }
   const normalizedBody =
     body && !(body instanceof FormData) && typeof body !== "string"
       ? JSON.stringify(body)
@@ -38,6 +38,9 @@ export async function apiRequest<T>(
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...requestOptions,
+    // Include credentials for login too so the browser stores the HttpOnly
+    // session cookie returned by the auth endpoint.
+    credentials: "include",
     headers: requestHeaders,
     body: normalizedBody,
   });

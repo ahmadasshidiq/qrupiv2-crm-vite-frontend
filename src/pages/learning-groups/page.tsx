@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { DefaultModulePage } from "@/components/backend-module-page";
-import { getAccessToken, getAuthUser } from "@/lib/auth/session";
+import { getAuthUser } from "@/lib/auth/session";
 import { toast } from "sonner";
 import { fetchLearningGroups } from "./actions";
 import { LEARNING_GROUPS_PAGE_CONFIG } from "./page.config";
@@ -15,7 +15,7 @@ export default function LearningGroupsPage() {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${getAccessToken() ?? ""}`,
+            credentials: "include",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({

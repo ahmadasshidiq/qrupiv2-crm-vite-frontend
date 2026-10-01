@@ -1,7 +1,7 @@
-import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { GlobalSearch } from "./global-search";
+import { NotificationMenu } from "./notification-menu";
 
 type AppHeaderProps = {
   eyebrow?: string;
@@ -64,14 +64,7 @@ export function AppHeader({
         <div className="flex min-w-0 items-center gap-2 [&>button]:min-w-0 [&>button]:flex-1 lg:contents">
           <GlobalSearch />
           <div className="flex shrink-0 items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              size="icon-lg"
-              className="rounded-xl"
-              aria-label="Notifikasi"
-            >
-              <Bell />
-            </Button>
+            <NotificationMenu />
             <Button
               variant="ghost"
               size="icon-lg"
