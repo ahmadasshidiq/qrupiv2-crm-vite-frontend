@@ -222,7 +222,7 @@ export function LearningGroupMembersList({ groupId }: { groupId: string }) {
         </div>
       )}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="max-w-xl gap-5 sm:max-w-xl">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-xl gap-5 sm:max-w-xl">
           <div className="space-y-1 pr-6">
             <h3 className="text-base font-semibold">Tambah Anggota Grup</h3>
             <p className="mt-1 text-xs text-zinc-500">
