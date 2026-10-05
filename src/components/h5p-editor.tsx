@@ -70,6 +70,7 @@ export const H5PEditor = forwardRef<H5PEditorHandle, H5PEditorProps>(
       try {
         await h5pService.delete(savedContentId);
         setSavedContentId("");
+        setEditorContentId("new");
         setDeleteOpen(false);
         onDeleted?.();
         toast.success("Media H5P berhasil dihapus.");
