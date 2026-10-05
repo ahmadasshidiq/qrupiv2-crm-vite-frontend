@@ -22,13 +22,10 @@ function resolveH5PUrls<T>(value: T, insideParams = false): T {
       return `/${value.slice(basePath.length)}` as T;
     }
     if (!value.startsWith("/")) return value as T;
-    // H5P sound effects are resolved relative to the player base path by the
-    // web component. Remove our base path there to avoid /h5p/h5p/... URLs.
     if (insideParams && value.startsWith(`${basePath}/`)) {
       return value.slice(basePath.length) as T;
     }
-    // Some H5P paths already include the configured base path (/h5p), while
-    // paths such as /libraries and /editor are relative to that base path.
+
     const resolved = value.startsWith(`${basePath}/`)
       ? value
       : `${basePath}${value}`;
@@ -71,7 +68,6 @@ async function getCsrfToken(): Promise<string> {
 
 export const h5pService = {
   getEdit: async (contentId?: string): Promise<IEditorModel> => {
-    // New content is loaded from /new. Existing content uses /:id/edit.
     const isNew = !contentId || contentId === "new" || contentId === "undefined";
     const response = await fetch(
       isNew
@@ -92,7 +88,6 @@ export const h5pService = {
     contentId: string,
     requestBody: { library: string; params: unknown },
   ): Promise<H5PSaveResult> => {
-    // H5PEditorUI passes undefined for a new content item.
     const isNew =
       !contentId || contentId === "new" || contentId === "undefined";
     const csrfToken = await getCsrfToken();

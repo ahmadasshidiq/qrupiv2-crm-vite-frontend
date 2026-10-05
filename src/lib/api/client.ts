@@ -38,8 +38,6 @@ export async function apiRequest<T>(
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...requestOptions,
-    // Include credentials for login too so the browser stores the HttpOnly
-    // session cookie returned by the auth endpoint.
     credentials: "include",
     headers: requestHeaders,
     body: normalizedBody,

@@ -37,8 +37,6 @@ export const H5PEditor = forwardRef<H5PEditorHandle, H5PEditorProps>(
           message.includes(" 500");
         if (!missingContent || requestedContentId === "new") throw error;
 
-        // The resource can still contain an old ID when its H5P was deleted
-        // before the resource itself was saved. Start with a fresh editor.
         setSavedContentId("");
         setEditorContentId("new");
         onDeleted?.();
@@ -51,7 +49,6 @@ export const H5PEditor = forwardRef<H5PEditorHandle, H5PEditorProps>(
         const result = await editorRef.current?.save();
         if (result?.contentId) {
           setSavedContentId(result.contentId);
-          // H5PEditorUI emits `onSaved`; the parent owns the single success toast.
         } else {
           toast.error("Media H5P belum valid. Periksa field yang masih merah.");
         }
@@ -87,9 +84,6 @@ export const H5PEditor = forwardRef<H5PEditorHandle, H5PEditorProps>(
       <div className="w-full overflow-x-auto rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-950 sm:p-5">
         <H5PEditorUI
           ref={editorRef}
-          // H5PEditorUI keeps its internal editor state after the initial
-          // mount. Remount it when switching between a new/existing item so
-          // the previous content type cannot leak into the next form.
           key={editorContentId}
           contentId={editorContentId}
           loadContentCallback={loadEditorContent}

@@ -88,12 +88,10 @@ export async function createResource(
     const formData = new FormData();
 
     Object.entries(values).forEach(([key, value]) => {
-      // Skip empty values
       if (value === "" || value === undefined || value === null) {
         return;
       }
 
-      // Single File
       if (value instanceof File) {
         if (value.size > 0) {
           formData.append(key, value, value.name);
@@ -101,7 +99,6 @@ export async function createResource(
         return;
       }
 
-      // FileList
       if (value instanceof FileList) {
         Array.from(value).forEach((file) => {
           if (file.size > 0) {
@@ -111,7 +108,6 @@ export async function createResource(
         return;
       }
 
-      // Array: string[], File[], dll
       if (Array.isArray(value)) {
         value.forEach((item) => {
           if (item === "" || item === undefined || item === null) {
@@ -125,7 +121,6 @@ export async function createResource(
             return;
           }
 
-          // Jangan stringify object sembarangan
           if (
             typeof item === "string" ||
             typeof item === "number" ||
@@ -138,7 +133,6 @@ export async function createResource(
         return;
       }
 
-      // Primitive values
       if (
         typeof value === "string" ||
         typeof value === "number" ||
