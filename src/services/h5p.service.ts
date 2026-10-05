@@ -13,11 +13,20 @@ const baseUrl = (import.meta.env.VITE_H5P_BASE_URL ?? "/h5p").replace(
   /\/$/,
   "",
 );
+const collectionUrl = `${baseUrl}/`;
 const basePath = baseUrl.startsWith("/") ? baseUrl : new URL(baseUrl).pathname;
 
-function resolveH5PUrls<T>(value: T): T {
+function resolveH5PUrls<T>(value: T, insideParams = false): T {
   if (typeof value === "string") {
+    if (insideParams && value.startsWith(`${basePath.slice(1)}/`)) {
+      return `/${value.slice(basePath.length)}` as T;
+    }
     if (!value.startsWith("/")) return value as T;
+    // H5P sound effects are resolved relative to the player base path by the
+    // web component. Remove our base path there to avoid /h5p/h5p/... URLs.
+    if (insideParams && value.startsWith(`${basePath}/`)) {
+      return value.slice(basePath.length) as T;
+    }
     // Some H5P paths already include the configured base path (/h5p), while
     // paths such as /libraries and /editor are relative to that base path.
     const resolved = value.startsWith(`${basePath}/`)
@@ -26,11 +35,14 @@ function resolveH5PUrls<T>(value: T): T {
     return resolved as T;
   }
   if (Array.isArray(value)) {
-    return value.map((item) => resolveH5PUrls(item)) as T;
+    return value.map((item) => resolveH5PUrls(item, insideParams)) as T;
   }
   if (value && typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [key, resolveH5PUrls(item)]),
+      Object.entries(value).map(([key, item]) => [
+        key,
+        resolveH5PUrls(item, insideParams || key === "params"),
+      ]),
     ) as T;
   }
   return value;
@@ -85,7 +97,7 @@ export const h5pService = {
       !contentId || contentId === "new" || contentId === "undefined";
     const csrfToken = await getCsrfToken();
     const response = await fetch(
-      isNew ? baseUrl : `${baseUrl}/${encodeURIComponent(contentId)}`,
+      isNew ? collectionUrl : `${baseUrl}/${encodeURIComponent(contentId)}`,
       {
         method: isNew ? "POST" : "PATCH",
         headers: {
@@ -97,6 +109,21 @@ export const h5pService = {
       },
     );
     return parseResponse<H5PSaveResult>(response, "Gagal menyimpan H5P");
+  },
+
+  delete: async (contentId: string): Promise<void> => {
+    const csrfToken = await getCsrfToken();
+    const response = await fetch(
+      `${baseUrl}/${encodeURIComponent(contentId)}`,
+      {
+        method: "DELETE",
+        headers: { "CSRF-Token": csrfToken },
+        credentials: "include",
+      },
+    );
+    if (!response.ok) {
+      throw new Error(`Gagal menghapus H5P: ${response.status} ${await response.text()}`);
+    }
   },
 
   getPlay: async (contentId: string): Promise<IPlayerModel> => {

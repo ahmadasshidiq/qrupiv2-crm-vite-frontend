@@ -813,6 +813,7 @@ function RecordForm({
                       setH5pContentId(contentId);
                       toast.success("Media H5P berhasil disimpan.");
                     }}
+                    onDeleted={() => setH5pContentId("")}
                   />
                   <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
                     {guidance.helperText}
