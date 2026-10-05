@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { DefaultModulePage } from "@/components/backend-module-page";
 import { getAuthUser } from "@/lib/auth/session";
 import { toast } from "sonner";
+import { getCsrfToken } from "@/lib/auth/session";
 import { fetchLearningResources } from "./actions";
 import { LEARNING_RESOURCES_PAGE_CONFIG } from "./page.config";
 
@@ -14,8 +15,9 @@ export default function LearningResourcesPage() {
         `${import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1"}/export/excel`,
         {
           method: "POST",
+          credentials: "include",
           headers: {
-            credentials: "include",
+            "X-CSRF-Token": getCsrfToken() ?? "",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({

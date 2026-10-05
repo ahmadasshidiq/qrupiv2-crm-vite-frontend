@@ -6,6 +6,7 @@ import { fetchUsers, type UserCategory } from "./actions";
 import { USERS_PAGE_CONFIG } from "./page.config";
 import type { PaginationFilters } from "@/lib/api/paginated";
 import { toast } from "sonner";
+import { getCsrfToken } from "@/lib/auth/session";
 
 export default function UsersPage() {
   const [searchParams] = useSearchParams();
@@ -70,8 +71,9 @@ export default function UsersPage() {
         `${import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1"}/export/excel`,
         {
           method: "POST",
+          credentials: "include",
           headers: {
-            credentials: "include",
+            "X-CSRF-Token": getCsrfToken() ?? "",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({

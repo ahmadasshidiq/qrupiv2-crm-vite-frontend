@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { fetchActivityItems } from "./actions";
 import { ActivityCategoryManager } from "./components/activity-category-manager";
 import { ACTIVITY_ITEMS_PAGE_CONFIG } from "./page.config";
+import { getCsrfToken } from "@/lib/auth/session";
 export default function ActivityItemsPage() {
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   const exportActivityItems = useCallback(async () => {
@@ -15,8 +16,9 @@ export default function ActivityItemsPage() {
         `${import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1"}/export/excel`,
         {
           method: "POST",
+          credentials: "include",
           headers: {
-            credentials: "include",
+            "X-CSRF-Token": getCsrfToken() ?? "",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({

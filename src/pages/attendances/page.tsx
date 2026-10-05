@@ -14,6 +14,7 @@ import { ATTENDANCES_PAGE_CONFIG } from "./page.config";
 import type { PaginationFilters } from "@/lib/api/paginated";
 import type { ApiRecordDto } from "@/lib/dto/api";
 import { AttendanceReportDialog } from "./components/attendance-report-dialog";
+import { getCsrfToken } from "@/lib/auth/session";
 
 export default function AttendancesPage() {
   return <AdminAttendancesPage />;
@@ -123,8 +124,9 @@ function AdminAttendancesPage() {
         `${import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1"}/export/excel`,
         {
           method: "POST",
+          credentials: "include",
           headers: {
-            credentials: "include",
+            "X-CSRF-Token": getCsrfToken() ?? "",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
