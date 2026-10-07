@@ -256,6 +256,7 @@ function modelFromHref(href: string) {
     institutions: "institutions",
     users: "users",
     roles: "roles",
+    announcements: "notifications",
   };
   return aliases[path] ?? path;
 }

@@ -15,6 +15,7 @@ import {
   PlusCircle,
   SquareActivity,
   FileText,
+  Megaphone,
 } from "lucide-react";
 import type { NavigationItem, SearchSuggestion } from "./types";
 
@@ -82,6 +83,11 @@ export const INSIGHT_NAVIGATION: NavigationItem[] = [
 ];
 
 export const ADMINISTRATION_NAVIGATION: NavigationItem[] = [
+  {
+    label: "Pengumuman",
+    href: "/announcements",
+    icon: Megaphone,
+  },
   {
     label: "Role & Izin",
     href: "/roles",

@@ -4,7 +4,7 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { BrowserRouter, Navigate, Route, Routes, useSearchParams } from "react-router-dom";
 import type { ReactNode } from "react";
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import { hasPermission } from "@/lib/auth/session";
+import { getAuthUser, getRoleName, hasPermission } from "@/lib/auth/session";
 import UsersPage from "@/pages/users/page";
 import InstitutionsPage from "@/pages/institutions/page";
 import RolesPage from "@/pages/roles/page";
@@ -39,6 +39,8 @@ import { ACTIVITY_ITEMS_PAGE_CONFIG } from "@/pages/activity-items/page.config";
 import LegalPage from "@/pages/legal/page";
 import LegalDocumentsPage from "@/pages/legal-documents/page";
 import { LEGAL_DOCUMENTS_PAGE_CONFIG } from "@/pages/legal-documents/page.config";
+import AnnouncementsPage from "@/pages/announcements/page";
+import { getAnnouncementsPageConfig } from "@/pages/announcements/page.config";
 
 function App() {
   return (
@@ -55,6 +57,8 @@ function App() {
           }
         >
           <Route path="/dashboard" element={<PermissionRoute model="dashboard" action="get-overview"><DashboardPage /></PermissionRoute>} />
+          <Route path="/announcements" element={<PermissionRoute model="notifications"><AnnouncementsPage /></PermissionRoute>} />
+          {moduleFormRoutes("/announcements", getAnnouncementsPageConfig(getRoleName(getAuthUser()), getAuthUser()?.id))}
           <Route path="/users" element={<PermissionRoute model="users"><UsersPage /></PermissionRoute>} />
           {moduleFormRoutes("/users", USERS_PAGE_CONFIG)}
           <Route

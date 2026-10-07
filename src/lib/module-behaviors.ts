@@ -148,6 +148,14 @@ const MODULE_BEHAVIORS: Record<string, ModuleBehavior> = {
       { key: "period_type", label: "Periode" },
     ],
   },
+  Pengumuman: {
+    endpoint: "/notifications",
+    fields: [
+      { key: "audience", label: "Tujuan penerima" },
+      { key: "title", label: "Judul pengumuman" },
+      { key: "message", label: "Pesan", type: "textarea" },
+    ],
+  },
 };
 
 export function getModuleBehavior(config: BackendModuleConfig) {

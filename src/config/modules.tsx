@@ -1,5 +1,6 @@
 import {
   Activity,
+  Megaphone,
   BookOpen,
   Building2,
   CalendarCheck2,
@@ -30,6 +31,14 @@ const ADMIN_ROLES = [
 const SCHOOL_ROLES = [...ADMIN_ROLES, "teacher", "guru", "staff"];
 
 export const APP_MODULES: AppModule[] = [
+  {
+    title: "Pengumuman",
+    singular: "pengumuman",
+    description: "Kirim pengumuman ke user, grup, institusi, atau sistem.",
+    href: "/announcements",
+    icon: Megaphone,
+    roles: SCHOOL_ROLES,
+  },
   {
     title: "Pengguna",
     singular: "pengguna",
