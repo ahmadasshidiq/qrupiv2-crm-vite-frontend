@@ -28,7 +28,7 @@ type ImportJob = {
   total_data?: number;
   processed_data?: number;
   failed_data?: number;
-  errors?: string[];
+  errors?: string[] | string;
   error_message?: string;
 };
 
@@ -39,6 +39,20 @@ type ImportDialogProps = {
   description: string;
   onCompleted?: () => void;
 };
+
+function parseImportErrors(errors: ImportJob["errors"]): string[] {
+  if (Array.isArray(errors)) return errors;
+  if (!errors) return [];
+
+  try {
+    const parsed = JSON.parse(atob(errors)) as unknown;
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [errors];
+  } catch {
+    return [errors];
+  }
+}
 
 export function ImportDialog({
   open,
@@ -143,6 +157,7 @@ export function ImportDialog({
     : 0;
   const isRunning =
     uploading || job?.status === "pending" || job?.status === "processing";
+  const importErrors = parseImportErrors(job?.errors);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -229,9 +244,9 @@ export function ImportDialog({
                   </p>
                 </>
               ) : null}
-              {job.errors?.length ? (
+              {importErrors.length ? (
                 <ul className="mt-3 list-disc space-y-1 pl-5 text-red-600">
-                  {job.errors.slice(0, 5).map((error) => (
+                  {importErrors.slice(0, 5).map((error) => (
                     <li key={error}>{error}</li>
                   ))}
                 </ul>
