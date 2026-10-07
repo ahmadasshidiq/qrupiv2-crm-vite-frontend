@@ -10,7 +10,7 @@ export function AppLayout() {
   const user = getAuthUser();
   const institution = user?.institution;
   const header = {
-    title: institution?.name ?? "Qrupi V2 CRM",
+    title: institution?.name ?? "Qrupi CRM",
     institutionLogoUrl:
       institution?.file_url ?? institution?.avatar_url ?? undefined,
   };
@@ -18,8 +18,8 @@ export function AppLayout() {
   useEffect(() => {
     const isSuperAdmin = getRoleName(user) === "super_admin";
     document.title = isSuperAdmin
-      ? "Qrupi V2 - CRM"
-      : `${institution?.name ?? "Qrupi"} - Qrupi V2 Portal Pelanggan`;
+      ? "Qrupi - CRM"
+      : `${institution?.name ?? "Qrupi"} - Qrupi - Portal Pelanggan`;
   }, [institution?.name, user]);
 
   return (

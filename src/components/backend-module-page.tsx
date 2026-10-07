@@ -152,6 +152,7 @@ type DefaultModulePageProps = {
   }) => boolean;
   onHeaderAction?: () => void;
   onExport?: () => void;
+  onImport?: () => void;
 };
 
 const ITEMS_PER_PAGE = 12;
@@ -322,6 +323,7 @@ function DefaultModulePageContent({
   onToolbarAction,
   onHeaderAction,
   onExport,
+  onImport,
 }: DefaultModulePageProps) {
   const behavior = getModuleBehavior(config);
   const location = useLocation();
@@ -340,7 +342,7 @@ function DefaultModulePageContent({
   const canFilter =
     canShowAction("filter") && hasAnyPermission(["get", "get-all"]);
   const canImport =
-    canShowAction("import") && hasAnyPermission(["import", "create"]);
+    canShowAction("import") && hasPermission(model, "import");
   const canExport =
     canShowAction("export") && hasAnyPermission(["export", "get", "get-all"]);
   const [items, setItems] = useState<ApiRecordDto[]>([]);
@@ -474,6 +476,7 @@ function DefaultModulePageContent({
                   className="p-4 border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300 hover:bg-blue-100 hover:text-blue-800 dark:border-blue-900/70 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
                   type="button"
                   variant="outline"
+                  onClick={onImport}
                 >
                   <Upload /> Import
                 </Button>

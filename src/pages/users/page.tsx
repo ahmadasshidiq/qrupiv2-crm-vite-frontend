@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { DefaultModulePage } from "@/components/backend-module-page";
 import { getAuthUser, getRoleName } from "@/lib/auth/session";
@@ -7,12 +7,14 @@ import { USERS_PAGE_CONFIG } from "./page.config";
 import type { PaginationFilters } from "@/lib/api/paginated";
 import { toast } from "sonner";
 import { getCsrfToken } from "@/lib/auth/session";
+import { ImportDialog } from "@/components/import-dialog";
 
 export default function UsersPage() {
   const [searchParams] = useSearchParams();
   const category: UserCategory =
     searchParams.get("category") === "student" ? "student" : "staff";
   const isSuperAdmin = getRoleName(getAuthUser()) === "super_admin";
+  const [importOpen, setImportOpen] = useState(false);
   const config = useMemo(
     () => ({
       ...USERS_PAGE_CONFIG,
@@ -106,10 +108,19 @@ export default function UsersPage() {
   }, [category]);
 
   return (
-    <DefaultModulePage
-      config={config}
-      fetchPage={fetchPage}
-      onExport={() => void exportUsers()}
-    />
+    <>
+      <DefaultModulePage
+        config={config}
+        fetchPage={fetchPage}
+        onExport={() => void exportUsers()}
+        onImport={() => setImportOpen(true)}
+      />
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title={category === "student" ? "Siswa" : "Guru & Admin"}
+        description="Download template terlebih dahulu, isi data sesuai format, lalu upload kembali file Excel untuk diproses."
+      />
+    </>
   );
 }
