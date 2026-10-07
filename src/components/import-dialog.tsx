@@ -46,6 +46,7 @@ function parseImportErrors(errors: ImportJob["errors"]): string[] {
 
   try {
     const parsed = JSON.parse(atob(errors)) as unknown;
+    if (parsed === null) return [];
     return Array.isArray(parsed)
       ? parsed.filter((item): item is string => typeof item === "string")
       : [errors];
@@ -161,7 +162,7 @@ export function ImportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-2rem)] max-w-[calc(100%-2rem)] gap-6 rounded-2xl p-6 sm:!max-w-2xl sm:p-8 lg:p-10">
+      <DialogContent className="w-[calc(100%-2rem)] max-w-[calc(100%-2rem)] gap-6 rounded-2xl p-6 sm:!max-w-2xl sm:p-6 lg:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base font-semibold">
             Import Data {title}
@@ -169,16 +170,6 @@ export function ImportDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          {/* <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 text-sm text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/20 dark:text-blue-200">
-            <div className="flex gap-3">
-              <AlertCircle className="mt-0.5 size-5 shrink-0" />
-              <p>
-                Gunakan file Excel dengan format kolom yang sesuai. Kolom
-                bertanda <span className="font-semibold text-red-500">*</span>{" "}
-                wajib diisi.
-              </p>
-            </div>
-          </div> */}
           <div className="flex flex-col justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-900/60 dark:bg-amber-950/20 sm:flex-row sm:items-center">
             <div>
               <p className="font-semibold">Template Import</p>
