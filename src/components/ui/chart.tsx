@@ -2,7 +2,10 @@ import type { ComponentProps } from "react";
 import {
   Bar,
   BarChart,
+  Cell,
   CartesianGrid,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -10,22 +13,48 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 
-export function ChartContainer({ className, children, ...props }: ComponentProps<typeof ResponsiveContainer>) {
-  return <div className={cn("h-full w-full", className)}><ResponsiveContainer {...props}>{children}</ResponsiveContainer></div>;
-}
-
-export function ChartTooltip(props: ComponentProps<typeof Tooltip>) {
-  return <Tooltip cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }} {...props} />;
-}
-
-export function ChartTooltipContent({ active, payload, label }: { active?: boolean; payload?: Array<{ name?: string; value?: number; color?: string }>; label?: string }) {
-  if (!active || !payload?.length) return null;
+export function ChartContainer({
+  className,
+  children,
+  ...props
+}: ComponentProps<typeof ResponsiveContainer>) {
   return (
-    <div className="rounded-lg border bg-background px-3 py-2 text-xs shadow-xl">
-      <p className="mb-1 font-medium">{label}</p>
-      {payload.map((item) => <p key={item.name} className="flex items-center gap-2"><span className="size-2 rounded-full" style={{ backgroundColor: item.color }} />{item.name}: {item.value}</p>)}
+    <div className={cn("h-full w-full", className)}>
+      <ResponsiveContainer {...props}>{children}</ResponsiveContainer>
     </div>
   );
 }
 
-export { Bar, BarChart, CartesianGrid, XAxis, YAxis };
+export function ChartTooltip(props: ComponentProps<typeof Tooltip>) {
+  return (
+    <Tooltip cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }} {...props} />
+  );
+}
+
+export function ChartTooltipContent({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ name?: string; value?: number; color?: string }>;
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg border bg-background px-3 py-2 text-xs shadow-xl">
+      <p className="mb-1 font-medium">{label}</p>
+      {payload.map((item) => (
+        <p key={item.name} className="flex items-center gap-2">
+          <span
+            className="size-2 rounded-full"
+            style={{ backgroundColor: item.color }}
+          />
+          {item.name}: {item.value}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+export { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis };

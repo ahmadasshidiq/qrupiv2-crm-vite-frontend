@@ -53,7 +53,9 @@ const CHART_COLORS = [
 export function ActivityChartMode({ onBack }: { onBack: () => void }) {
   const [categories, setCategories] = useState<ApiRecordDto[]>([]);
   const [groups, setGroups] = useState<ApiRecordDto[]>([]);
-  const [chartData, setChartData] = useState<ActivityChartResponseDto | null>(null);
+  const [chartData, setChartData] = useState<ActivityChartResponseDto | null>(
+    null,
+  );
   const [draftFilters, setDraftFilters] =
     useState<ActivityFilters>(EMPTY_FILTERS);
   const [appliedFilters, setAppliedFilters] =
@@ -113,21 +115,23 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
     total_points: 0,
   };
   const chartItems = useMemo(() => {
-    return (chartData?.activities_by_item ?? []).slice(0, 12).map((item, index) => ({
-      label: item.activity_item_name,
-      total: item.total_activities,
-      color: item.color ?? CHART_COLORS[index % CHART_COLORS.length],
-    }));
+    return (chartData?.activities_by_item ?? [])
+      .slice(0, 12)
+      .map((item, index) => ({
+        label: item.activity_item_name,
+        total: item.total_activities,
+        color: item.color ?? CHART_COLORS[index % CHART_COLORS.length],
+      }));
   }, [chartData]);
 
   const maximum = Math.max(1, ...chartItems.map((item) => item.total));
   const groupChartItems = useMemo(() => {
-    return (chartData?.activities_by_learning_group ?? []).slice(0, 6).map(
-      (item) => ({
+    return (chartData?.activities_by_learning_group ?? [])
+      .slice(0, 6)
+      .map((item) => ({
         label: item.learning_group_name,
         total: item.total_activities,
-      }),
-    );
+      }));
   }, [chartData]);
   const groupMaximum = Math.max(
     1,
@@ -374,13 +378,16 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
               >
                 <div className="flex flex-1 items-end justify-center">
                   <span
-                    className="w-full max-w-16 rounded-t-md"
+                    className="group relative w-full max-w-16 rounded-t-md"
                     style={{
                       height: `${Math.max(8, (item.total / maximum) * 100)}%`,
                       backgroundColor: item.color,
                     }}
-                    title={`${item.label}: ${item.total} catatan`}
-                  />
+                  >
+                    <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-zinc-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block">
+                      {item.total} catatan
+                    </span>
+                  </span>
                 </div>
                 <span
                   className="line-clamp-2 min-h-7 text-[10px] leading-tight text-zinc-500"
@@ -483,7 +490,10 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
           ) : topTeachers.length ? (
             <div className="mt-5 divide-y divide-slate-100 dark:divide-white/10">
               {topTeachers.map((teacher, index) => (
-                <div key={teacher.name} className="flex items-center gap-3 py-3">
+                <div
+                  key={teacher.name}
+                  className="flex items-center gap-3 py-3"
+                >
                   <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-300">
                     {index + 1}
                   </span>

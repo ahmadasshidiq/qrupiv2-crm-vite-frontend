@@ -15,6 +15,14 @@ import {
 import { fetchLearningGroups } from "@/pages/learning-groups/actions";
 import { fetchAttendanceChart } from "./chart-actions";
 import type { AttendanceChartResponseDto } from "@/lib/dto/attendance-chart";
+import {
+  Cell,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  Pie,
+  PieChart,
+} from "@/components/ui/chart";
 
 type AttendanceFilters = {
   type: "student" | "teacher";
@@ -123,17 +131,6 @@ export default function AttendanceChartPage() {
     (total, item) => total + item.total,
     0,
   );
-  const reasonGradient = useMemo(() => {
-    if (!reasonTotal) return "#f4f4f5 0 100%";
-    let position = 0;
-    return absenceReasons
-      .map((item, index) => {
-        const start = position;
-        position += (item.total / reasonTotal) * 100;
-        return `${REASON_COLORS[index % REASON_COLORS.length]} ${start}% ${position}%`;
-      })
-      .join(", ");
-  }, [absenceReasons, reasonTotal]);
   return (
     <main className="mx-auto w-full max-w-[1440px] px-5 py-6 sm:px-8 lg:px-10">
       <Button
@@ -280,12 +277,16 @@ export default function AttendanceChartPage() {
                     {status.map((entry) => (
                       <div
                         key={entry.key}
-                        title={`${entry.label}: ${item[entry.key as "on_time" | "late" | "absent"]}`}
-                        className={`${entry.color} w-2 rounded-t`}
+                        className={`${entry.color} group relative w-2 rounded-t`}
                         style={{
                           height: `${(item[entry.key as "on_time" | "late" | "absent"] / maximum) * 100}%`,
                         }}
-                      />
+                      >
+                        <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-zinc-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block">
+                          {entry.label}:{" "}
+                          {item[entry.key as "on_time" | "late" | "absent"]}
+                        </span>
+                      </div>
                     ))}
                   </div>
                   <span className="text-[10px] text-muted-foreground">
@@ -351,14 +352,32 @@ export default function AttendanceChartPage() {
           </p>
           {absenceReasons.length ? (
             <div className="mt-5 grid items-center gap-6 md:grid-cols-[220px_1fr]">
-              <div
-                className="mx-auto flex size-48 items-center justify-center rounded-full"
-                style={{ background: `conic-gradient(${reasonGradient})` }}
-              >
-                <div className="flex size-28 items-center justify-center rounded-full bg-card text-center text-xs text-muted-foreground">
-                  Total
-                  <br />
-                  <strong className="text-lg text-foreground">
+              <div className="mx-auto size-48">
+                <ChartContainer>
+                  <PieChart>
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Pie
+                      data={absenceReasons}
+                      dataKey="total"
+                      nameKey="absence_reason_name"
+                      innerRadius={48}
+                      outerRadius={78}
+                      paddingAngle={2}
+                    >
+                      {absenceReasons.map((item, index) => (
+                        <Cell
+                          key={
+                            item.absence_reason_id ?? item.absence_reason_name
+                          }
+                          fill={REASON_COLORS[index % REASON_COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ChartContainer>
+                <div className="pointer-events-none relative -mt-32 flex h-24 flex-col items-center justify-center text-center text-xs text-muted-foreground">
+                  <span>Total</span>
+                  <strong className="mt-1 text-lg leading-none text-foreground">
                     {reasonTotal}
                   </strong>
                 </div>
