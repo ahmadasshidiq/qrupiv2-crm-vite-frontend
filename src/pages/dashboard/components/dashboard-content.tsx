@@ -10,6 +10,7 @@ import {
   CalendarCheck,
   ChevronRight,
   CircleCheck,
+  Printer,
   GraduationCap,
   Info,
   Layers3,
@@ -53,6 +54,10 @@ import { ApiError } from "@/lib/api/client";
 import { canReadModel, getAuthUser, getRoleName } from "@/lib/auth/session";
 import { fetchDashboard } from "../actions";
 import type { DashboardFilters } from "../actions";
+import { fetchActivityChart } from "@/pages/activities/actions";
+import { fetchActivityCategories } from "@/pages/activity-categories/actions";
+import { fetchLearningGroups } from "@/pages/learning-groups/actions";
+import type { ApiRecordDto } from "@/lib/dto/api";
 import { APP_MODULES } from "@/config/modules";
 import { DashboardMetricCard } from "@/components/dashboard/dashboard-metrics";
 import { EmptyPage } from "@/components/empty-page";
@@ -337,7 +342,7 @@ function InstitutionActivityCharts({
         <p className="mt-1 text-xs text-zinc-500">
           14 hari terakhir dari data agregasi dashboard
         </p>
-        <div className="mt-6 h-44">
+        <div className="mt-6 h-64">
           {chartTrend.length ? (
             <ChartContainer>
               <BarChart
@@ -881,27 +886,43 @@ function SchoolInsightsPanel({
       }
     ).top_students ?? [];
   const quizSessions = insightList(data, ["quiz_sessions"]);
-  const quizStudents = Object.values(quizSessions.reduce<Record<string, DashboardInsight[]>>((groups, session) => {
-    const userId = String(session.user_id ?? session.user_name ?? "");
-    if (userId) (groups[userId] ??= []).push(session);
-    return groups;
-  }, {})).map((sessions) => {
-    const scores = sessions.map((session) => Number(session.score ?? session.final_score)).filter(Number.isFinite);
-    return { id: sessions[0].user_id, name: sessions[0].user_name, score: scores.length ? scores.reduce((total, score) => total + score, 0) / scores.length : 0, quiz_count: scores.length };
-  }).filter((student) => student.name && student.quiz_count);
+  const quizStudents = Object.values(
+    quizSessions.reduce<Record<string, DashboardInsight[]>>(
+      (groups, session) => {
+        const userId = String(session.user_id ?? session.user_name ?? "");
+        if (userId) (groups[userId] ??= []).push(session);
+        return groups;
+      },
+      {},
+    ),
+  )
+    .map((sessions) => {
+      const scores = sessions
+        .map((session) => Number(session.score ?? session.final_score))
+        .filter(Number.isFinite);
+      return {
+        id: sessions[0].user_id,
+        name: sessions[0].user_name,
+        score: scores.length
+          ? scores.reduce((total, score) => total + score, 0) / scores.length
+          : 0,
+        quiz_count: scores.length,
+      };
+    })
+    .filter((student) => student.name && student.quiz_count);
   const students = (
     quizStudents.length
       ? quizStudents
       : topStudents.length
-      ? topStudents
-      : chartTopStudents.length
-        ? chartTopStudents.map((item) => ({
-            id: item.user_id ? String(item.user_id) : undefined,
-            name: item.user_name ? String(item.user_name) : undefined,
-            score: Number(item.total_points ?? item.total_activities ?? 0),
-            activity_count: Number(item.total_activities ?? 0),
-          }))
-        : rankings
+        ? topStudents
+        : chartTopStudents.length
+          ? chartTopStudents.map((item) => ({
+              id: item.user_id ? String(item.user_id) : undefined,
+              name: item.user_name ? String(item.user_name) : undefined,
+              score: Number(item.total_points ?? item.total_activities ?? 0),
+              activity_count: Number(item.total_activities ?? 0),
+            }))
+          : rankings
   ).filter(
     (item) =>
       typeof item.name === "string" &&
@@ -916,9 +937,12 @@ function SchoolInsightsPanel({
     }))
     .filter((student) => student.name && student.activity_count > 0);
   const violationChart = activityChartData(data, "violation_activity_chart");
-  const violationTopStudents = (violationChart as ActivityChartAggregate & {
-    top_students?: Array<Record<string, unknown>>;
-  }).top_students ?? [];
+  const violationTopStudents =
+    (
+      violationChart as ActivityChartAggregate & {
+        top_students?: Array<Record<string, unknown>>;
+      }
+    ).top_students ?? [];
   const frequentViolators = violationTopStudents
     .map((item) => ({
       id: item.user_id ? String(item.user_id) : undefined,
@@ -944,7 +968,8 @@ function SchoolInsightsPanel({
               {item.subject ?? item.title ?? item.name ?? "Grup belajar"}
             </p>
             <p className="mt-1 text-xs text-zinc-500">
-              Guru: {item.teacher_name ?? item.instructor_name ?? "Belum ditentukan"}
+              Guru:{" "}
+              {item.teacher_name ?? item.instructor_name ?? "Belum ditentukan"}
             </p>
           </div>
         )}
@@ -989,8 +1014,8 @@ function SchoolInsightsPanel({
               {item.quiz_count !== undefined
                 ? `Nilai rata-rata ${item.score?.toFixed(0)}`
                 : item.activity_count !== undefined
-                ? `${item.activity_count} aktivitas`
-                : `Nilai ${item.score ?? "-"}`}
+                  ? `${item.activity_count} aktivitas`
+                  : `Nilai ${item.score ?? "-"}`}
             </span>
           </div>
         )}
@@ -1261,6 +1286,8 @@ export function DashboardContent() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [filterLearningGroups, setFilterLearningGroups] = useState<ApiRecordDto[]>([]);
+  const [filterCategories, setFilterCategories] = useState<ApiRecordDto[]>([]);
   const [filters, setFilters] = useState<DashboardFilters>({
     period: "custom",
     startDate: toDashboardIsoDate(dashboardDefaultStart),
@@ -1282,7 +1309,38 @@ export function DashboardContent() {
           ),
         ),
       ]);
-      setDashboard(res.data as unknown as DashboardData);
+      const dashboardData = res.data as unknown as DashboardData;
+      const roleName = getRoleName(user).toLowerCase();
+      const isInstitutionAdmin =
+        roleName.includes("admin") || roleName.includes("staff");
+
+      if (isInstitutionAdmin) {
+        const activityFilters = {
+          category_id: requestFilters?.categoryId || undefined,
+          start_date: requestFilters?.startDate || undefined,
+          end_date: requestFilters?.endDate || undefined,
+          learning_group_id: requestFilters?.learningGroupId || undefined,
+        };
+        const activityChart = await fetchActivityChart(activityFilters);
+        const currentData = dashboardData.data ?? {};
+        dashboardData.data = {
+          ...currentData,
+          activities:
+            (Array.isArray(currentData.activities) && currentData.activities.length) ||
+            currentData.activities
+              ? currentData.activities
+              : activityChart.activities_by_item,
+          learning_groups:
+            (Array.isArray(currentData.learning_groups) &&
+              currentData.learning_groups.length) ||
+            currentData.learning_groups
+              ? currentData.learning_groups
+              : activityChart.activities_by_learning_group,
+          positive_activity_chart:
+            currentData.positive_activity_chart ?? activityChart,
+        };
+      }
+      setDashboard(dashboardData);
     } catch (error) {
       const message =
         error instanceof ApiError
@@ -1296,14 +1354,32 @@ export function DashboardContent() {
   };
 
   useEffect(() => {
-    const task = window.setTimeout(() => void load({
-      period: "custom",
-      startDate: toDashboardIsoDate(dashboardDefaultStart),
-      endDate: toDashboardIsoDate(dashboardToday),
-      learningGroupId: "",
-      categoryId: "",
-    }), 0);
-    return () => window.clearTimeout(task);
+    const masterTask = window.setTimeout(() => {
+      void Promise.all([
+        fetchLearningGroups(1, 500, { "lg.status": "active" }),
+        fetchActivityCategories(1, 500),
+      ])
+        .then(([groups, categories]) => {
+          setFilterLearningGroups(groups.items);
+          setFilterCategories(categories.items);
+        })
+        .catch(() => toast.error("Data grup/kategori gagal dimuat."));
+    }, 0);
+    const task = window.setTimeout(
+      () =>
+        void load({
+          period: "custom",
+          startDate: toDashboardIsoDate(dashboardDefaultStart),
+          endDate: toDashboardIsoDate(dashboardToday),
+          learningGroupId: "",
+          categoryId: "",
+        }),
+      0,
+    );
+    return () => {
+      window.clearTimeout(masterTask);
+      window.clearTimeout(task);
+    };
   }, []);
 
   // `role` is the stable machine value for permissions and branching.
@@ -1341,7 +1417,14 @@ export function DashboardContent() {
         title="Dashboard belum tersedia"
         description="Data dashboard belum dapat diambil. Periksa koneksi Anda lalu coba lagi."
         detail={loadError}
-        action={<Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => void load(filters)}>Coba lagi</Button>}
+        action={
+          <Button
+            className="bg-blue-600 text-white hover:bg-blue-700"
+            onClick={() => void load(filters)}
+          >
+            Coba lagi
+          </Button>
+        }
       />
     );
   }
@@ -1349,18 +1432,36 @@ export function DashboardContent() {
   const { summary } = dashboard;
   const alerts = dashboard.alerts ?? [];
   const rankings = normalizeDashboardRankings(dashboard);
-  const positiveActivityChart = activityChartData(dashboard.data ?? {}, "positive_activity_chart");
-  const violationActivityChart = activityChartData(dashboard.data ?? {}, "violation_activity_chart");
-  const periodActivities = Number(positiveActivityChart.summary?.total_activities ?? 0) + Number(violationActivityChart.summary?.total_activities ?? 0);
-  const periodAttendanceLogs = insightList(dashboard.data ?? {}, ["attendance"]).length;
+  const positiveActivityChart = activityChartData(
+    dashboard.data ?? {},
+    "positive_activity_chart",
+  );
+  const violationActivityChart = activityChartData(
+    dashboard.data ?? {},
+    "violation_activity_chart",
+  );
+  const periodActivities =
+    Number(positiveActivityChart.summary?.total_activities ?? 0) +
+    Number(violationActivityChart.summary?.total_activities ?? 0);
+  const periodAttendanceLogs = insightList(dashboard.data ?? {}, [
+    "attendance",
+  ]).length;
   const periodSummary = {
     ...summary,
-    total_activities: positiveActivityChart.summary || violationActivityChart.summary ? periodActivities : summary.total_activities,
-    total_attendance_logs: dashboard.data?.attendance && typeof dashboard.data.attendance === "object" ? periodAttendanceLogs : summary.total_attendance_logs,
+    total_activities:
+      positiveActivityChart.summary || violationActivityChart.summary
+        ? periodActivities
+        : summary.total_activities,
+    total_attendance_logs:
+      dashboard.data?.attendance &&
+      typeof dashboard.data.attendance === "object"
+        ? periodAttendanceLogs
+        : summary.total_attendance_logs,
   };
   const superAdminData = {
     ...dashboard.data,
-    institution_map: dashboard.data?.institution_map ??
+    institution_map:
+      dashboard.data?.institution_map ??
       (dashboard.data?.data && typeof dashboard.data.data === "object"
         ? (dashboard.data.data as Record<string, unknown>).institution_map
         : undefined),
@@ -1374,7 +1475,10 @@ export function DashboardContent() {
       (ranking) => ranking.key === "top_institutions_by_groups",
     )?.items,
   };
-  const learningGroups = insightList(dashboard.data ?? {}, ["learning_groups"]);
+  const dashboardLearningGroups = insightList(dashboard.data ?? {}, ["learning_groups"]);
+  const learningGroups = dashboardLearningGroups.length
+    ? dashboardLearningGroups
+    : filterLearningGroups;
   const activities = insightList(dashboard.data ?? {}, ["activities"]);
   const categories = Array.from(
     new Map(
@@ -1386,11 +1490,12 @@ export function DashboardContent() {
   )
     .filter(([id, name]) => id && name)
     .map(([id, name]) => ({ id, name: String(name) }));
+  const availableCategories = categories.length ? categories : filterCategories;
   const selectedGroup = learningGroups.find(
     (group) => String(group.id) === filters.learningGroupId,
   );
-  const selectedCategory = categories.find(
-    (category) => category.id === filters.categoryId,
+  const selectedCategory = availableCategories.find(
+    (category) => String(category.id) === filters.categoryId,
   );
   const copy = (role && ROLE_COPY[role]) || {
     heroLabel: "Ringkasan dashboard",
@@ -1410,6 +1515,44 @@ export function DashboardContent() {
     const allowedByRole = !roles?.length || roles.includes(roleName);
     return allowedByRole && canReadModel(modelFromModuleHref(href));
   }).slice(0, 4);
+  const exportPdf = () => {
+    const report = window.open("", "_blank", "width=1000,height=800");
+    if (!report) {
+      toast.error("Popup diblokir browser. Izinkan popup untuk export PDF.");
+      return;
+    }
+    const escapeHtml = (value: unknown) =>
+      String(value ?? "-").replace(
+        /[&<>"']/g,
+        (character) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+          })[character] ?? character,
+      );
+    const cards = metricKeys
+      .map(
+        (key) =>
+          `<div class="card"><div class="label">${escapeHtml(key.replaceAll("_", " "))}</div><div class="value">${escapeHtml(periodSummary[key])}</div></div>`,
+      )
+      .join("");
+    const charts = Array.from(document.querySelectorAll("svg.recharts-surface"))
+      .filter((svg) => svg.closest("main") === document.querySelector("main"))
+      .map((svg) => `<section class="chart">${svg.outerHTML}</section>`)
+      .join("");
+    report.document.write(
+      `<!doctype html><html><head><title>Laporan Dashboard</title><style>body{font-family:Arial,sans-serif;color:#111827;padding:32px}h1{margin:0 0 4px;font-size:24px}h2{margin:28px 0 10px;font-size:16px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}.meta{color:#6b7280;font-size:12px;margin-bottom:20px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card{border:1px solid #e5e7eb;border-radius:8px;padding:12px}.label{font-size:11px;color:#6b7280;text-transform:capitalize}.value{font-size:20px;font-weight:700;margin-top:5px}.chart{margin:24px 0;break-inside:avoid}.chart svg{display:block;width:100%;height:280px}@media print{body{padding:0}}</style></head><body><h1>Dashboard</h1><div class="meta">Periode: ${escapeHtml(filters.startDate)} sampai ${escapeHtml(filters.endDate)}</div><div class="cards">${cards}</div><h2>Visualisasi dashboard</h2>${charts}</body></html>`,
+    );
+    report.document.close();
+    report.focus();
+    report.setTimeout(() => {
+      report.print();
+      report.close();
+    }, 300);
+  };
 
   return (
     <main className="mx-auto w-full max-w-[1440px] space-y-6 px-5 py-6 sm:px-8 lg:px-10">
@@ -1454,6 +1597,7 @@ export function DashboardContent() {
               </p>
             </div>
             <Button
+              className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40"
               variant="ghost"
               size="sm"
               onClick={() => {
@@ -1468,7 +1612,7 @@ export function DashboardContent() {
                 void load(resetFilters);
               }}
             >
-              <RotateCcw className="mr-2 size-4" /> Reset
+              <RotateCcw className="mr-2 size-4" /> Reset Filter
             </Button>
           </div>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
@@ -1564,21 +1708,32 @@ export function DashboardContent() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua kategori</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
+                  {availableCategories.map((category) => (
+                    <SelectItem key={String(category.id)} value={String(category.id)}>
+                      {String(
+                        category.name ??
+                          ("title" in category ? category.title : "Kategori"),
+                      )}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 flex justify-end gap-2">
             <Button
               className="p-4 bg-blue-600 text-white hover:bg-blue-700"
               onClick={() => void load(filters)}
             >
               Terapkan filter
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2 p-4 bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700"
+              onClick={exportPdf}
+              disabled={loading}
+            >
+              <Printer className="size-4" /> Export PDF
             </Button>
           </div>
         </section>
@@ -1605,7 +1760,8 @@ export function DashboardContent() {
                   metricKey={key}
                   value={periodSummary[key]}
                   contextLabel={
-                    key === "total_activities" || key === "total_attendance_logs"
+                    key === "total_activities" ||
+                    key === "total_attendance_logs"
                       ? "Periode"
                       : undefined
                   }

@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ChartNoAxesCombined, RotateCcw } from "lucide-react";
+import {
+  ArrowLeft,
+  ChartNoAxesCombined,
+  FileDown,
+  RotateCcw,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -67,6 +72,40 @@ export default function QuizRankingPage() {
     school: "Sekolah",
     class: "Kelas",
   };
+  const exportPdf = () => {
+    const report = window.open("", "_blank", "width=1000,height=800");
+    if (!report) {
+      toast.error("Popup diblokir browser. Izinkan popup untuk export PDF.");
+      return;
+    }
+    const escapeHtml = (value: unknown) =>
+      String(value ?? "-").replace(
+        /[&<>"']/g,
+        (character) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+          })[character] ?? character,
+      );
+    const rows = ranking
+      .map((item, index) => {
+        const score = item.average_score ?? item.score ?? item.total_score ?? 0;
+        return `<tr><td>${index + 1}</td><td>${escapeHtml(item.user_name ?? item.name ?? "Siswa")}</td><td>${score}</td><td>${item.quiz_count ?? item.completed_quizzes ?? 0}</td></tr>`;
+      })
+      .join("");
+    report.document.write(
+      `<!doctype html><html><head><title>Ranking Siswa</title><style>body{font-family:Arial,sans-serif;color:#111827;padding:32px}h1{margin:0 0 4px;font-size:24px}p{color:#6b7280;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:24px;font-size:13px}th,td{text-align:left;border-bottom:1px solid #e5e7eb;padding:10px}th{color:#6b7280}@media print{body{padding:0}}</style></head><body><h1>Ranking Siswa</h1><p>Scope: ${escapeHtml(scopeLabels[appliedFilters.scope])} · Periode: ${escapeHtml(appliedFilters.start_date || "Semua tanggal")} sampai ${escapeHtml(appliedFilters.end_date || "Semua tanggal")}</p><table><thead><tr><th>Peringkat</th><th>Nama siswa</th><th>Nilai</th><th>Sesi selesai</th></tr></thead><tbody>${rows}</tbody></table></body></html>`,
+    );
+    report.document.close();
+    report.focus();
+    report.setTimeout(() => {
+      report.print();
+      report.close();
+    }, 300);
+  };
   return (
     <main className="mx-auto w-full max-w-[1440px] px-5 py-6 sm:px-8 lg:px-10">
       <Button
@@ -103,7 +142,7 @@ export default function QuizRankingPage() {
             <RotateCcw className="size-4" /> Reset Filter
           </Button>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className={`grid gap-3 sm:grid-cols-2 ${draftFilters.scope === "class" ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
           <div className="grid gap-1.5">
             <Label>Scope ranking</Label>
             <Select
@@ -129,7 +168,7 @@ export default function QuizRankingPage() {
               </SelectContent>
             </Select>
           </div>
-          {(draftFilters.scope === "class") && (
+          {draftFilters.scope === "class" && (
             <div className="grid gap-1.5">
               <Label>Grup pembelajaran</Label>
               <ResourceAutocomplete
@@ -187,12 +226,20 @@ export default function QuizRankingPage() {
             />
           </div>
         </div>
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-end gap-2">
           <Button
             className="p-4 bg-blue-600 text-white hover:bg-blue-700"
             onClick={() => setAppliedFilters(draftFilters)}
           >
             Terapkan Filter
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-2 p-4 bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700"
+            onClick={exportPdf}
+            disabled={loading}
+          >
+            <FileDown className="size-4" /> Export PDF
           </Button>
         </div>
       </section>

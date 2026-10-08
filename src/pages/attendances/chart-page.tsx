@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, RotateCcw } from "lucide-react";
+import { ArrowLeft, Printer, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -131,6 +131,59 @@ export default function AttendanceChartPage() {
     (total, item) => total + item.total,
     0,
   );
+  const exportPdf = () => {
+    const report = window.open("", "_blank", "width=1000,height=800");
+    if (!report) {
+      toast.error("Popup diblokir browser. Izinkan popup untuk export PDF.");
+      return;
+    }
+    const escapeHtml = (value: unknown) =>
+      String(value ?? "-").replace(
+        /[&<>"']/g,
+        (character) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+          })[character] ?? character,
+      );
+    const chartMarkup = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-export-chart]"),
+    )
+      .map((element, index) => {
+        const svg = element.querySelector("svg");
+        if (!svg) return "";
+        if (index === 0) {
+          return `<section style="margin:28px 0;break-inside:avoid"><h2 style="margin:0 0 8px">Tren harian</h2><div style="height:280px;width:100%">${svg.outerHTML}</div><div style="font-size:12px;color:#4b5563">● Tepat waktu &nbsp;&nbsp; ● Terlambat &nbsp;&nbsp; ● Tidak hadir</div></section>`;
+        }
+        return `<section style="margin:28px 0;break-inside:avoid"><h2 style="margin:0 0 8px">Alasan ketidakhadiran terbanyak</h2><div style="display:flex;align-items:center;gap:32px"><div style="position:relative;height:280px;width:280px"><div style="height:280px;width:280px">${svg.outerHTML}</div><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:14px;color:#6b7280">Total<strong style="font-size:22px;color:#111827">${reasonTotal}</strong></div></div><div style="flex:1">${absenceReasons.map((item) => `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #e5e7eb;padding:8px 0;font-size:13px"><span>${escapeHtml(item.absence_reason_name)}</span><strong>${item.total} (${item.percentage}%)</strong></div>`).join("")}</div></div></section>`;
+      })
+      .join("");
+    report.document.write(
+      `<!doctype html><html><head><title>Laporan Grafik Absensi</title><style>body{font-family:Arial,sans-serif;color:#111827;padding:32px}h1{margin:0 0 4px;font-size:24px}h2{margin:28px 0 10px;font-size:16px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}.meta{color:#6b7280;font-size:12px;margin-bottom:20px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card{border:1px solid #e5e7eb;border-radius:8px;padding:12px}.label{font-size:11px;color:#6b7280}.value{font-size:20px;font-weight:700;margin-top:5px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;border-bottom:1px solid #e5e7eb;padding:8px}th{color:#6b7280}@media print{body{padding:0}}</style></head><body><h1>Grafik Absensi ${filters.type === "student" ? "Siswa" : "Guru"}</h1><div class="meta">Periode: ${escapeHtml(filters.start_date)} sampai ${escapeHtml(filters.end_date)} · Dibuat: ${escapeHtml(new Date().toLocaleString("id-ID"))}</div><div class="cards">${[
+        ["Total record", summary.total_records],
+        ["Tepat waktu", summary.on_time],
+        ["Terlambat", summary.late],
+        ["Tidak hadir", summary.absent],
+      ]
+        .map(
+          ([label, value]) =>
+            `<div class="card"><div class="label">${label}</div><div class="value">${value}</div></div>`,
+        )
+        .join(
+          "",
+        )}</div><h2>Tren harian</h2><table><thead><tr><th>Tanggal</th><th>Tepat waktu</th><th>Terlambat</th><th>Tidak hadir</th><th>Total</th></tr></thead><tbody>${trend.map((item) => `<tr><td>${escapeHtml(item.date)}</td><td>${item.on_time}</td><td>${item.late}</td><td>${item.absent}</td><td>${item.total}</td></tr>`).join("")}</tbody></table><h2>Per grup belajar</h2><table><thead><tr><th>Grup</th><th>Total</th><th>Tepat waktu</th><th>Terlambat</th><th>Tidak hadir</th><th>Rate</th></tr></thead><tbody>${(data?.by_learning_group ?? []).map((item) => `<tr><td>${escapeHtml(item.learning_group_name)}</td><td>${item.total}</td><td>${item.on_time}</td><td>${item.late}</td><td>${item.absent}</td><td>${item.attendance_rate}%</td></tr>`).join("")}</tbody></table></body></html>`,
+    );
+    report.document.close();
+    report.document.body.insertAdjacentHTML("beforeend", `${chartMarkup}`);
+    report.focus();
+    report.setTimeout(() => {
+      report.print();
+      report.close();
+    }, 300);
+  };
   return (
     <main className="mx-auto w-full max-w-[1440px] px-5 py-6 sm:px-8 lg:px-10">
       <Button
@@ -238,12 +291,20 @@ export default function AttendanceChartPage() {
             </Select>
           </div>
         </div>
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-end gap-2">
           <Button
             className="p-4 bg-blue-600 text-white hover:bg-blue-700"
             onClick={() => setFilters(draft)}
           >
             Terapkan Filter
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-2 p-4 bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700"
+            onClick={exportPdf}
+            disabled={!data || loading}
+          >
+            <Printer className="size-4" /> Export PDF
           </Button>
         </div>
       </section>
@@ -254,26 +315,32 @@ export default function AttendanceChartPage() {
           ["Terlambat", summary.late],
           ["Tidak hadir", summary.absent],
         ].map(([label, value]) => (
-          <div key={String(label)} className="rounded-xl border bg-card p-5">
+          <div
+            key={String(label)}
+            className="rounded-xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]"
+          >
             <p className="text-sm text-muted-foreground">{label}</p>
             <p className="mt-2 text-2xl font-bold">{loading ? "-" : value}</p>
           </div>
         ))}{" "}
       </div>
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-        <section className="rounded-xl border bg-card p-5">
+        <section
+          data-export-chart
+          className="rounded-xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]"
+        >
           <h2 className="font-semibold">Tren harian</h2>
           <p className="mb-6 text-sm text-muted-foreground">
             Jumlah absensi berdasarkan Waktu Kejadian.
           </p>
-          <div className="flex h-64 items-end gap-2 overflow-x-auto border-b pb-1">
+          <div className="flex h-64 items-end gap-2 overflow-visible border-b pb-1">
             {trend.length ? (
               trend.map((item) => (
                 <div
                   key={item.date}
                   className="flex min-w-8 flex-1 flex-col items-center gap-1"
                 >
-                  <div className="flex h-52 items-end gap-0.5">
+                  <div className="flex h-52 items-end gap-0.5 overflow-visible pt-8">
                     {status.map((entry) => (
                       <div
                         key={entry.key}
@@ -312,7 +379,7 @@ export default function AttendanceChartPage() {
             ))}
           </div>
         </section>
-        <section className="rounded-xl border bg-card p-5">
+        <section className="rounded-xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
           <h2 className="font-semibold">Ringkasan status</h2>
           <div className="mt-5 space-y-4">
             {status.map((item) => (
@@ -332,36 +399,48 @@ export default function AttendanceChartPage() {
               </div>
             ))}
           </div>
-          <div className="mt-8 rounded-lg bg-muted/50 p-4 text-sm">
+          <div className="mt-8 rounded-lg bg-slate-50 p-4 text-sm dark:bg-white/[0.03]">
             <p>Tingkat kehadiran</p>
             <p className="mt-1 text-2xl font-bold">
               {summary.attendance_rate}%
             </p>
             <p className="mt-1 text-muted-foreground">
-              Rata-rata keterlambatan {summary.average_late_minutes} menit
+              Persentase keterlambatan{" "}
+              {summary.total_records
+                ? ((summary.late / summary.total_records) * 100).toFixed(2)
+                : "0.00"}
+              %
             </p>
           </div>
         </section>
       </div>
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <section className="rounded-xl border bg-card p-5">
-          <h2 className="font-semibold">Alasan ketidakhadiran terbanyak</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+      <div className="mt-4 grid items-start gap-4 lg:grid-cols-[2fr_3fr]">
+        <section
+          data-export-chart
+          className="h-fit rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.04]"
+        >
+          <h2 className="text-base font-semibold">
+            Alasan ketidakhadiran terbanyak
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
             Distribusi alasan berdasarkan data absensi dengan status tidak
             hadir.
           </p>
           {absenceReasons.length ? (
-            <div className="mt-5 grid items-center gap-6 md:grid-cols-[220px_1fr]">
-              <div className="mx-auto size-48">
+            <div className="mt-4 grid items-center gap-4 md:grid-cols-[210px_1fr]">
+              <div className="relative mx-auto size-52">
                 <ChartContainer>
                   <PieChart>
-                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartTooltip
+                      content={<ChartTooltipContent />}
+                      position={{ x: 8, y: 0 }}
+                    />
                     <Pie
                       data={absenceReasons}
                       dataKey="total"
                       nameKey="absence_reason_name"
-                      innerRadius={48}
-                      outerRadius={78}
+                      innerRadius={54}
+                      outerRadius={92}
                       paddingAngle={2}
                     >
                       {absenceReasons.map((item, index) => (
@@ -375,7 +454,7 @@ export default function AttendanceChartPage() {
                     </Pie>
                   </PieChart>
                 </ChartContainer>
-                <div className="pointer-events-none relative -mt-32 flex h-24 flex-col items-center justify-center text-center text-xs text-muted-foreground">
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center text-xs text-muted-foreground">
                   <span>Total</span>
                   <strong className="mt-1 text-lg leading-none text-foreground">
                     {reasonTotal}
@@ -413,7 +492,7 @@ export default function AttendanceChartPage() {
             </p>
           )}
         </section>
-        <section className="rounded-xl border bg-card p-5">
+        <section className="h-fit rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.04]">
           <h2 className="font-semibold">Per grup belajar</h2>
           {data?.by_learning_group?.length ? (
             <div className="mt-4 overflow-x-auto">

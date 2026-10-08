@@ -33,7 +33,6 @@ export function getAnnouncementsPageConfig(
       edit: false,
       delete: false,
     },
-    headerAction: { label: "Buat pengumuman", href: "/announcements/create" },
     createEndpoint: "/notifications/announcements",
     fields: [
       { key: "audience", title: "Tujuan penerima" },

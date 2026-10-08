@@ -2,7 +2,7 @@
 import type { BackendModuleConfig } from "@/components/backend-module-page";
 import type { ApiRecordDto } from "@/lib/dto/api";
 import { Badge } from "@/components/ui/badge";
-import { ChartNoAxesCombined } from "lucide-react";
+import { Podium } from "lucide-react";
 
 const positiveBadgeClass =
   "px-4 py-1 text-xs font-bold bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-900";
@@ -118,7 +118,7 @@ export const QUIZ_SESSIONS_PAGE_CONFIG: BackendModuleConfig = {
   emptyMessage: "Belum ada sesi kuis",
   headerAction: {
     label: "Ranking Siswa",
-    icon: ChartNoAxesCombined,
+    icon: Podium,
     href: "/quiz-sessions/rankings",
   },
   actions: {

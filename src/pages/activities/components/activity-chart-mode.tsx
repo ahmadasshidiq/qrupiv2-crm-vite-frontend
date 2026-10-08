@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   BarChart3,
   CalendarDays,
+  Printer,
   RotateCcw,
   Users,
 } from "lucide-react";
@@ -23,6 +24,15 @@ import type { ActivityChartResponseDto } from "@/lib/dto/activity-chart";
 import { fetchActivityCategories } from "@/pages/activity-categories/actions";
 import { fetchLearningGroups } from "@/pages/learning-groups/actions";
 import { fetchActivityChart } from "../actions";
+import {
+  Bar,
+  BarChart,
+  Cell,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  XAxis,
+} from "@/components/ui/chart";
 
 type ActivityFilters = {
   categoryId: string;
@@ -124,7 +134,6 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
       }));
   }, [chartData]);
 
-  const maximum = Math.max(1, ...chartItems.map((item) => item.total));
   const groupChartItems = useMemo(() => {
     return (chartData?.activities_by_learning_group ?? [])
       .slice(0, 6)
@@ -147,10 +156,8 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
       violation: item.violation_activities,
     }));
   }, [chartData]);
-  const dailyMaximum = Math.max(
-    1,
-    ...dailyChartItems.map((item) => Math.max(item.positive, item.violation)),
-  );
+  const hasDailyPositive = dailyChartItems.some((item) => item.positive > 0);
+  const hasDailyViolation = dailyChartItems.some((item) => item.violation > 0);
   const topStudents = useMemo(() => {
     return (chartData?.top_students ?? []).slice(0, 5).map((item) => ({
       name: item.user_name,
@@ -164,6 +171,62 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
       activities: item.total_activities,
     }));
   }, [chartData]);
+  const exportPdf = () => {
+    const report = window.open("", "_blank", "width=1000,height=800");
+    if (!report) {
+      toast.error("Popup diblokir browser. Izinkan popup untuk export PDF.");
+      return;
+    }
+    const escapeHtml = (value: unknown) =>
+      String(value ?? "-").replace(
+        /[&<>"']/g,
+        (character) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+          })[character] ?? character,
+      );
+    const charts = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-export-activity-chart]"),
+    )
+      .map((element) => {
+        const svg = element.querySelector("svg");
+        return svg
+          ? `<section><h2>${escapeHtml(element.dataset.exportTitle)}</h2>${svg.outerHTML}</section>`
+          : "";
+      })
+      .join("");
+    const groupRows = (chartData?.activities_by_learning_group ?? [])
+      .map(
+        (item) =>
+          `<tr><td>${escapeHtml(item.learning_group_name)}</td><td>${item.total_activities}</td></tr>`,
+      )
+      .join("");
+    const studentRows = topStudents
+      .map(
+        (item) =>
+          `<tr><td>${escapeHtml(item.name)}</td><td>${item.activities}</td><td>${item.points}</td></tr>`,
+      )
+      .join("");
+    const teacherRows = topTeachers
+      .map(
+        (item) =>
+          `<tr><td>${escapeHtml(item.name)}</td><td>${item.activities}</td></tr>`,
+      )
+      .join("");
+    report.document.write(
+      `<!doctype html><html><head><title>Laporan Grafik Aktivitas</title><style>body{font-family:Arial,sans-serif;color:#111827;padding:32px}h1{margin:0 0 4px;font-size:24px}h2{margin:28px 0 10px;font-size:16px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}.meta{color:#6b7280;font-size:12px;margin-bottom:20px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.card{border:1px solid #e5e7eb;border-radius:8px;padding:12px}.label{font-size:11px;color:#6b7280}.value{font-size:20px;font-weight:700;margin-top:5px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;border-bottom:1px solid #e5e7eb;padding:8px}th{color:#6b7280}section{margin:28px 0;break-inside:avoid}section svg{display:block;width:100%;height:280px}@media print{body{padding:0}}</style></head><body><h1>Grafik Aktivitas</h1><div class="meta">${escapeHtml(appliedFilters.startDate || "Semua tanggal")} sampai ${escapeHtml(appliedFilters.endDate || "Semua tanggal")}</div><div class="cards"><div class="card"><div class="label">Total aktivitas</div><div class="value">${summary.total_activities}</div></div><div class="card"><div class="label">Aktivitas positif</div><div class="value">${summary.positive_activities}</div></div><div class="card"><div class="label">Pelanggaran</div><div class="value">${summary.violation_activities}</div></div></div>${charts}<h2>Aktivitas per Grup Pembelajaran</h2><table><thead><tr><th>Grup</th><th>Total aktivitas</th></tr></thead><tbody>${groupRows}</tbody></table><h2>Top Siswa</h2><table><thead><tr><th>Nama</th><th>Aktivitas</th><th>Poin</th></tr></thead><tbody>${studentRows}</tbody></table><h2>Top Guru</h2><table><thead><tr><th>Nama</th><th>Aktivitas</th></tr></thead><tbody>${teacherRows}</tbody></table></body></html>`,
+    );
+    report.document.close();
+    report.focus();
+    report.setTimeout(() => {
+      report.print();
+      report.close();
+    }, 300);
+  };
   const selectCategory = categories.find(
     (item) => item.id === draftFilters.categoryId,
   );
@@ -330,12 +393,22 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
           </div>
         </div>
         <div className="mt-4 flex justify-end">
-          <Button
-            className="p-4 bg-blue-600 text-white hover:bg-blue-700"
-            onClick={() => setAppliedFilters(draftFilters)}
-          >
-            Terapkan Filter
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              className="p-4 bg-blue-600 text-white hover:bg-blue-700"
+              onClick={() => setAppliedFilters(draftFilters)}
+            >
+              Terapkan Filter
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2 p-4 bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700"
+              onClick={exportPdf}
+              disabled={loading || !chartData}
+            >
+              <Printer className="size-4" /> Export PDF
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -359,52 +432,55 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
           tone="red"
         />
       </div>
-      <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
-        <div>
-          <h3 className="text-sm font-semibold">Aktivitas per Jenis</h3>
-          <p className="mt-1 text-xs text-zinc-500">
-            Jumlah pencatatan untuk setiap jenis aktivitas. Total poin:{" "}
-            {summary.total_points}
-          </p>
-        </div>
-        {loading ? (
-          <div className="mt-8 h-64 animate-pulse rounded-xl bg-slate-100 dark:bg-white/10" />
-        ) : chartItems.length ? (
-          <div className="mt-8 flex h-64 items-end gap-3 overflow-x-auto pb-8">
-            {chartItems.map((item) => (
-              <div
-                key={item.label}
-                className="flex h-full min-w-24 flex-1 flex-col justify-end gap-2 text-center"
-              >
-                <div className="flex flex-1 items-end justify-center">
-                  <span
-                    className="group relative w-full max-w-16 rounded-t-md"
-                    style={{
-                      height: `${Math.max(8, (item.total / maximum) * 100)}%`,
-                      backgroundColor: item.color,
-                    }}
-                  >
-                    <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-zinc-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block">
-                      {item.total} catatan
-                    </span>
-                  </span>
-                </div>
-                <span
-                  className="line-clamp-2 min-h-7 text-[10px] leading-tight text-zinc-500"
-                  title={item.label}
+      <div className="mt-5 grid gap-5 lg:grid-cols-[3fr_2fr]">
+        <section
+          data-export-activity-chart
+          data-export-title="Aktivitas per Jenis"
+          className="rounded-2xl border border-slate-200 bg-white px-5 pt-5 pb-2 dark:border-white/10 dark:bg-white/[0.04]"
+        >
+          <div>
+            <h3 className="text-sm font-semibold">Aktivitas per Jenis</h3>
+            <p className="mt-1 text-xs text-zinc-500">
+              Jumlah pencatatan untuk setiap jenis aktivitas. Total poin:{" "}
+              {summary.total_points}
+            </p>
+          </div>
+          {loading ? (
+            <div className="mt-8 h-64 animate-pulse rounded-xl bg-slate-100 dark:bg-white/10" />
+          ) : chartItems.length ? (
+            <div className="mt-6 h-64">
+              <ChartContainer>
+                <BarChart
+                  data={chartItems}
+                  margin={{ top: 4, right: 8, left: -20, bottom: 14 }}
                 >
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex h-64 items-center justify-center text-sm text-zinc-500">
-            Belum ada aktivitas sesuai filter.
-          </div>
-        )}
-      </section>
-      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+                  <XAxis
+                    dataKey="label"
+                    padding={{ left: 28, right: 28 }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    angle={0}
+                    textAnchor="middle"
+                    height={28}
+                    interval={0}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="total" name="Catatan" radius={[6, 6, 0, 0]}>
+                    {chartItems.map((item) => (
+                      <Cell key={item.label} fill={item.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ChartContainer>
+            </div>
+          ) : (
+            <div className="flex h-64 items-center justify-center text-sm text-zinc-500">
+              Belum ada aktivitas sesuai filter.
+            </div>
+          )}
+        </section>
         <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
           <div>
             <h3 className="text-sm font-semibold">
@@ -415,7 +491,7 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
             </p>
           </div>
           {loading ? (
-            <div className="mt-6 h-64 animate-pulse rounded-xl bg-slate-100 dark:bg-white/10" />
+            <div className="mt-6 h-44 animate-pulse rounded-xl bg-slate-100 dark:bg-white/10" />
           ) : groupChartItems.length ? (
             <div className="mt-6 space-y-4">
               {groupChartItems.map((item) => (
@@ -434,11 +510,13 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
               ))}
             </div>
           ) : (
-            <div className="flex h-64 items-center justify-center text-sm text-zinc-500">
+            <div className="flex h-44 items-center justify-center text-sm text-zinc-500">
               Belum ada grup belajar sesuai filter.
             </div>
           )}
         </section>
+      </div>
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
           <div>
             <h3 className="text-sm font-semibold">Top Siswa</h3>
@@ -500,7 +578,7 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
                   <span className="min-w-0 flex-1 truncate text-sm font-medium">
                     {teacher.name}
                   </span>
-                  <span className="text-xs font-semibold text-emerald-600">
+                  <span className="text-sm font-semibold text-emerald-600">
                     {teacher.activities} aktivitas
                   </span>
                 </div>
@@ -513,7 +591,11 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
           )}
         </section>
       </div>
-      <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
+      <section
+        data-export-activity-chart
+        data-export-title="Tren Aktivitas Harian"
+        className="mt-5 rounded-2xl border border-slate-200 bg-white px-5 pt-5 pb-2 dark:border-white/10 dark:bg-white/[0.04]"
+      >
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold">Tren Aktivitas Harian</h3>
@@ -533,33 +615,43 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
         {loading ? (
           <div className="mt-8 h-64 animate-pulse rounded-xl bg-slate-100 dark:bg-white/10" />
         ) : dailyChartItems.length ? (
-          <div className="mt-8 flex h-64 items-end gap-3 overflow-x-auto pb-8">
-            {dailyChartItems.map((item) => (
-              <div
-                key={item.label}
-                className="flex h-full min-w-14 flex-1 flex-col justify-end gap-2 text-center"
+          <div className="mt-6 h-64">
+            <ChartContainer>
+              <BarChart
+                data={dailyChartItems}
+                margin={{ top: 4, right: 8, left: 8, bottom: 14 }}
               >
-                <div className="flex flex-1 items-end justify-center gap-1">
-                  <span
-                    className="w-4 rounded-t bg-emerald-500"
-                    style={{
-                      height: `${item.positive ? Math.max(8, (item.positive / dailyMaximum) * 100) : 0}%`,
-                    }}
-                    title={`${item.positive} positif`}
+                <XAxis
+                  dataKey="label"
+                  padding={{ left: 28, right: 28 }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  angle={0}
+                  textAnchor="middle"
+                  height={28}
+                  interval={0}
+                  tick={{ fontSize: 10 }}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                {hasDailyPositive ? (
+                  <Bar
+                    dataKey="positive"
+                    name="Positif"
+                    fill="#10b981"
+                    radius={[6, 6, 0, 0]}
                   />
-                  <span
-                    className="w-4 rounded-t bg-red-500"
-                    style={{
-                      height: `${item.violation ? Math.max(8, (item.violation / dailyMaximum) * 100) : 0}%`,
-                    }}
-                    title={`${item.violation} pelanggaran`}
+                ) : null}
+                {hasDailyViolation ? (
+                  <Bar
+                    dataKey="violation"
+                    name="Pelanggaran"
+                    fill="#f43f5e"
+                    radius={[6, 6, 0, 0]}
                   />
-                </div>
-                <span className="whitespace-nowrap text-[10px] text-zinc-500">
-                  {item.label}
-                </span>
-              </div>
-            ))}
+                ) : null}
+              </BarChart>
+            </ChartContainer>
           </div>
         ) : (
           <div className="flex h-64 items-center justify-center text-sm text-zinc-500">
