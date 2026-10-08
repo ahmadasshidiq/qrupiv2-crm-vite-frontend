@@ -67,24 +67,39 @@ export function RichTextEditor({
   return (
     <div className="overflow-hidden rounded-xl border border-input bg-white dark:bg-white/[0.03]">
       <div className="flex flex-wrap items-center gap-2 border-b border-input bg-slate-50 p-3 dark:bg-white/[0.04]">
-        <Select defaultValue="16" onValueChange={(size) => setFontSize(size ?? "16")} disabled={disabled}>
-          <SelectTrigger aria-label="Ukuran font dalam pixel" className="h-8 w-16 px-2 text-xs" title="Ukuran font (px)">
+        <Select
+          defaultValue="16"
+          onValueChange={(size) => setFontSize(size ?? "16")}
+          disabled={disabled}
+        >
+          <SelectTrigger
+            aria-label="Ukuran font dalam pixel"
+            className="h-8 w-16 px-2 text-xs"
+            title="Ukuran font (px)"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-          {[
-            8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72, 80, 96, 120,
-            144, 180, 220, 260, 300,
-          ].map((size) => (
-            <SelectItem key={size} value={String(size)}>
-              {size}
-            </SelectItem>
-          ))}
+            {[
+              8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72, 80, 96,
+              120, 144, 180, 220, 260, 300,
+            ].map((size) => (
+              <SelectItem key={size} value={String(size)}>
+                {size}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <span className="text-xs text-muted-foreground mr-2">px</span>
-        <Select defaultValue="Arial" onValueChange={(font) => font && run("fontName", font)} disabled={disabled}>
-          <SelectTrigger aria-label="Jenis font" className="h-8 w-28 px-2 text-xs">
+        <Select
+          defaultValue="Arial"
+          onValueChange={(font) => font && run("fontName", font)}
+          disabled={disabled}
+        >
+          <SelectTrigger
+            aria-label="Jenis font"
+            className="h-8 w-28 px-2 text-xs"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -185,10 +200,50 @@ export function RichTextEditor({
           <RemoveFormatting className="size-4" />
         </Button>
         <span className="mx-1 h-5 w-px bg-border" />
-        <Button type="button" variant="ghost" size="icon" className="size-8" onClick={() => run("justifyLeft")} disabled={disabled} title="Rata kiri"><AlignLeft className="size-4" /></Button>
-        <Button type="button" variant="ghost" size="icon" className="size-8" onClick={() => run("justifyCenter")} disabled={disabled} title="Rata tengah"><AlignCenter className="size-4" /></Button>
-        <Button type="button" variant="ghost" size="icon" className="size-8" onClick={() => run("justifyRight")} disabled={disabled} title="Rata kanan"><AlignRight className="size-4" /></Button>
-        <Button type="button" variant="ghost" size="icon" className="size-8" onClick={() => run("justifyFull")} disabled={disabled} title="Rata kiri-kanan"><AlignJustify className="size-4" /></Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={() => run("justifyLeft")}
+          disabled={disabled}
+          title="Rata kiri"
+        >
+          <AlignLeft className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={() => run("justifyCenter")}
+          disabled={disabled}
+          title="Rata tengah"
+        >
+          <AlignCenter className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={() => run("justifyRight")}
+          disabled={disabled}
+          title="Rata kanan"
+        >
+          <AlignRight className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={() => run("justifyFull")}
+          disabled={disabled}
+          title="Rata kiri-kanan"
+        >
+          <AlignJustify className="size-4" />
+        </Button>
       </div>
       <div
         ref={editorRef}

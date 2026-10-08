@@ -32,6 +32,15 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import type { DateRange } from "react-day-picker";
+import { format } from "date-fns";
+import { CalendarDays } from "lucide-react";
 import { archiveResource, deleteResource } from "@/lib/api/resource";
 import { getAuthUser, getRoleName, hasPermission } from "@/lib/auth/session";
 import { getModuleBehavior } from "@/lib/module-behaviors";
@@ -77,6 +86,7 @@ export type BackendModuleConfig = {
   createEndpoint?: string;
   createPayload?: (values: Record<string, unknown>) => Record<string, unknown>;
   updatePayload?: (values: Record<string, unknown>) => Record<string, unknown>;
+  exportDateField?: string;
 };
 
 export type ModuleAction =
@@ -151,7 +161,7 @@ type DefaultModulePageProps = {
     icon?: LucideIcon;
   }) => boolean;
   onHeaderAction?: () => void;
-  onExport?: () => void;
+  onExport?: (range?: { from: string; to: string }) => void;
   onImport?: () => void;
 };
 
@@ -341,8 +351,7 @@ function DefaultModulePageContent({
   const canDelete = canShowAction("delete") && hasAnyPermission(["delete"]);
   const canFilter =
     canShowAction("filter") && hasAnyPermission(["get", "get-all"]);
-  const canImport =
-    canShowAction("import") && hasPermission(model, "import");
+  const canImport = canShowAction("import") && hasPermission(model, "import");
   const canExport =
     canShowAction("export") && hasAnyPermission(["export", "get", "get-all"]);
   const [items, setItems] = useState<ApiRecordDto[]>([]);
@@ -358,6 +367,8 @@ function DefaultModulePageContent({
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportRange, setExportRange] = useState<DateRange | undefined>();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -420,7 +431,9 @@ function DefaultModulePageContent({
           <h2 className="text-xl font-bold tracking-tight">{config.title}</h2>
           <p className="mt-1 text-xs text-zinc-500">{config.description}</p>
         </div>
-        {config.headerAction && canCreate && (onHeaderAction || config.headerAction.href) ? (
+        {config.headerAction &&
+        canCreate &&
+        (onHeaderAction || config.headerAction.href) ? (
           <Button
             className="h-10 px-4"
             variant="outline"
@@ -440,25 +453,98 @@ function DefaultModulePageContent({
           </Button>
         ) : null}
       </div>
+      <Dialog
+        open={exportOpen}
+        onOpenChange={(open) => {
+          setExportOpen(open);
+          if (!open) setExportRange(undefined);
+        }}
+      >
+        <DialogContent className="w-[calc(100%-1rem)] max-w-lg gap-5 px-6 py-5 sm:max-w-lg sm:px-6">
+          <div>
+            <h2 className="text-lg font-semibold">
+              Pilih rentang tanggal export
+            </h2>
+            <p className="text-sm text-zinc-500 mt-1">
+              Data akan difilter berdasarkan rentang tanggal yang dipilih.
+            </p>
+          </div>
+          <Popover>
+            <PopoverTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 w-full justify-start text-left font-normal"
+                />
+              }
+            >
+              <CalendarDays className="mr-2 size-4" />
+              {exportRange?.from
+                ? `${format(exportRange.from, "dd MMM yyyy")} - ${exportRange.to ? format(exportRange.to, "dd MMM yyyy") : "Pilih tanggal akhir"}`
+                : "Pilih rentang tanggal"}
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                selected={exportRange}
+                onSelect={setExportRange}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
+          <div className="flex justify-end gap-2">
+            <Button
+              className="p-4"
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setExportRange(undefined);
+                setExportOpen(false);
+              }}
+            >
+              Batal
+            </Button>
+            <Button
+              className="p-4 bg-blue-600 text-white hover:bg-blue-700"
+              type="button"
+              disabled={!exportRange?.from || !exportRange?.to}
+              onClick={() => {
+                if (!exportRange?.from || !exportRange.to) return;
+                onExport?.({
+                  from: `${format(exportRange.from, "yyyy-MM-dd")} 00:00:00`,
+                  to: `${format(exportRange.to, "yyyy-MM-dd")} 23:59:59`,
+                });
+                setExportRange(undefined);
+                setExportOpen(false);
+              }}
+            >
+              <Download className="mr-2 size-4" /> Export
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <DynamicPage
         toolbar={
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
               {config.toolbarActions
-                ?.filter(() => canCreate || config.allowToolbarActionsWithoutCreate)
+                ?.filter(
+                  () => canCreate || config.allowToolbarActionsWithoutCreate,
+                )
                 .map((action) => (
-                <Button
-                  className={`p-4 ${action.className ?? ""}`}
-                  key={action.href}
-                  variant="outline"
-                  onClick={() => {
-                    if (!onToolbarAction?.(action)) navigate(action.href);
-                  }}
-                >
-                  {action.icon ? <action.icon className="size-4" /> : null}
-                  {action.label}
-                </Button>
-              ))}
+                  <Button
+                    className={`p-4 ${action.className ?? ""}`}
+                    key={action.href}
+                    variant="outline"
+                    onClick={() => {
+                      if (!onToolbarAction?.(action)) navigate(action.href);
+                    }}
+                  >
+                    {action.icon ? <action.icon className="size-4" /> : null}
+                    {action.label}
+                  </Button>
+                ))}
               {canCreate ? (
                 <Button
                   className="p-4 bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
@@ -486,7 +572,10 @@ function DefaultModulePageContent({
                   className="p-4 border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100 hover:text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
                   type="button"
                   variant="outline"
-                  onClick={onExport}
+                  onClick={() => {
+                    setExportRange(undefined);
+                    setExportOpen(true);
+                  }}
                 >
                   <Download /> Export Excel
                 </Button>
@@ -753,7 +842,9 @@ function DefaultModulePageContent({
                 className="text-violet-600 hover:bg-violet-50 hover:text-violet-700 dark:text-violet-400 dark:hover:bg-violet-950/40"
                 aria-label="Edit data"
                 onClick={() =>
-                  navigate(`${location.pathname}/${record.id}/edit${location.search}`)
+                  navigate(
+                    `${location.pathname}/${record.id}/edit${location.search}`,
+                  )
                 }
               >
                 <SquarePen className="size-3.5" />
