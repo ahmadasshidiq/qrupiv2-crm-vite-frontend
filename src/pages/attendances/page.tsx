@@ -86,6 +86,7 @@ function AdminAttendancesPage() {
             { key: "check_in_at", label: "Waktu Masuk" },
             { key: "check_in_lat", label: "Latitude Masuk" },
             { key: "check_in_long", label: "Longitude Masuk" },
+            { key: "occurred_at", label: "Waktu Kejadian" },
             { key: "created_at", label: "Tanggal Dibuat" },
           ]
         : [
@@ -118,6 +119,7 @@ function AdminAttendancesPage() {
             { key: "check_out_at", label: "Waktu Check Out" },
             { key: "check_out_lat", label: "Latitude Check Out" },
             { key: "check_out_long", label: "Longitude Check Out" },
+            { key: "occurred_at", label: "Waktu Kejadian" },
             { key: "created_at", label: "Tanggal Dibuat" },
           ];
       const response = await fetch(
