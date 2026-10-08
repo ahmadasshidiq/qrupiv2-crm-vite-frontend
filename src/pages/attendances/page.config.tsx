@@ -1,22 +1,66 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { BackendModuleConfig } from "@/components/backend-module-page";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardList, FileText } from "lucide-react";
+import { ChartSpline, ClipboardList, FileText } from "lucide-react";
 import { AttendanceLog } from "./components/attendance-log";
 import type { ApiRecordDto } from "@/lib/dto/api";
 
 function formatAttendanceDate(value: unknown) {
   if (!value) return "-";
-  return new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(new Date(String(value)));
+  return new Intl.DateTimeFormat("id-ID", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(String(value)));
 }
 
 function AttendanceDetails({ record }: { record: ApiRecordDto }) {
   const user = record.user as ApiRecordDto | undefined;
   const recordedUser = record.recorded_user as ApiRecordDto | undefined;
   const reason = record.absence_reason as ApiRecordDto | undefined;
-  const statusLabels: Record<string, string> = { on_time: "Hadir", late: "Terlambat", absent: "Tidak hadir" };
-  const details = [["Nama", user?.name ?? record.user_name], ["Tipe", user?.type ?? record.type], ["Identitas", `${user?.context_type ?? record.user_context_type ?? "-"} ${user?.context_code ?? record.user_context_code ?? ""}`], ["Email", user?.email ?? record.user_email], ["Telepon", user?.phone], ["Status", statusLabels[String(record.status)] ?? record.status], ["Alasan", reason?.name ?? record.absence_reason_name], ["Catatan", record.absence_note], ["Dicatat oleh", recordedUser?.name ?? record.recorded_user_name], ["Waktu masuk", formatAttendanceDate(record.check_in_at)], ["Waktu keluar", formatAttendanceDate(record.check_out_at)], ["Perlu check-out", record.requires_check_out ? "Ya" : "Tidak"], ["Dibuat", formatAttendanceDate(record.created_at)], ["Diperbarui", formatAttendanceDate(record.updated_at)]];
-  return <div><h3 className="mb-3 text-base font-semibold">Detail Absensi {record.type === "student" ? "Siswa" : "Guru"}</h3><dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{details.map(([label, value]) => <div key={String(label)} className="rounded-xl bg-zinc-50 p-4 dark:bg-white/5"><dt className="text-xs text-zinc-500">{String(label)}</dt><dd className="mt-1 break-words text-sm font-medium">{String(value ?? "-")}</dd></div>)}</dl></div>;
+  const statusLabels: Record<string, string> = {
+    on_time: "Hadir",
+    late: "Terlambat",
+    absent: "Tidak hadir",
+  };
+  const details = [
+    ["Nama", user?.name ?? record.user_name],
+    ["Tipe", user?.type ?? record.type],
+    [
+      "Identitas",
+      `${user?.context_type ?? record.user_context_type ?? "-"} ${user?.context_code ?? record.user_context_code ?? ""}`,
+    ],
+    ["Email", user?.email ?? record.user_email],
+    ["Telepon", user?.phone],
+    ["Status", statusLabels[String(record.status)] ?? record.status],
+    ["Alasan", reason?.name ?? record.absence_reason_name],
+    ["Catatan", record.absence_note],
+    ["Dicatat oleh", recordedUser?.name ?? record.recorded_user_name],
+    ["Waktu masuk", formatAttendanceDate(record.check_in_at)],
+    ["Waktu keluar", formatAttendanceDate(record.check_out_at)],
+    ["Perlu check-out", record.requires_check_out ? "Ya" : "Tidak"],
+    ["Dibuat", formatAttendanceDate(record.created_at)],
+    ["Diperbarui", formatAttendanceDate(record.updated_at)],
+  ];
+  return (
+    <div>
+      <h3 className="mb-3 text-base font-semibold">
+        Detail Absensi {record.type === "student" ? "Siswa" : "Guru"}
+      </h3>
+      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {details.map(([label, value]) => (
+          <div
+            key={String(label)}
+            className="rounded-xl bg-zinc-50 p-4 dark:bg-white/5"
+          >
+            <dt className="text-xs text-zinc-500">{String(label)}</dt>
+            <dd className="mt-1 break-words text-sm font-medium">
+              {String(value ?? "-")}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
 }
 
 export const ATTENDANCES_PAGE_CONFIG: BackendModuleConfig = {
@@ -25,11 +69,16 @@ export const ATTENDANCES_PAGE_CONFIG: BackendModuleConfig = {
   description: "Pantau check-in, check-out, dan status kehadiran.",
   emptyMessage: "Belum ada data absensi",
   headerAction: {
-    label: "Alasan Ketidakhadiran",
-    icon: ClipboardList,
-    href: "/absence-reasons",
+    label: "Grafik Absensi",
+    icon: ChartSpline,
+    href: "/attendances/chart",
   },
   toolbarActions: [
+    {
+      label: "Alasan Ketidakhadiran",
+      href: "/absence-reasons",
+      icon: ClipboardList,
+    },
     { label: "Report Absensi PDF", href: "#attendance-report", icon: FileText },
   ],
   editableFields: [
@@ -114,7 +163,9 @@ export const ATTENDANCES_PAGE_CONFIG: BackendModuleConfig = {
             className={`px-4 py-1 text-xs font-bold ${tones[status] ?? ""}`}
           >
             {labels[status] ?? status}{" "}
-            {record.status === "absent" && record.absence_reason_name ? `- ${record.absence_reason_name}` : ""}
+            {record.status === "absent" && record.absence_reason_name
+              ? `- ${record.absence_reason_name}`
+              : ""}
           </Badge>
         );
       },
@@ -137,10 +188,38 @@ export const ATTENDANCE_STUDENT_EDIT_CONFIG: BackendModuleConfig = {
   ...ATTENDANCES_PAGE_CONFIG,
   title: "Absensi Siswa",
   editableFields: [
-    { key: "user_id", label: "Siswa", type: "resource", resourceEndpoint: "/users", resourceFilters: { "u.type": "student" }, resourcePlaceholder: "Cari siswa", required: true },
-    { key: "status", label: "Status", options: [{ label: "Hadir", value: "on_time" }, { label: "Terlambat", value: "late" }, { label: "Tidak hadir", value: "absent" }] },
-    { key: "absence_reason_id", label: "Alasan tidak hadir", type: "resource", resourceEndpoint: "/attendance-absence-reasons", resourcePlaceholder: "Pilih alasan", visibleWhen: { key: "status", values: ["absent"] } },
-    { key: "absence_note", label: "Catatan", type: "textarea", fullWidth: true },
+    {
+      key: "user_id",
+      label: "Siswa",
+      type: "resource",
+      resourceEndpoint: "/users",
+      resourceFilters: { "u.type": "student" },
+      resourcePlaceholder: "Cari siswa",
+      required: true,
+    },
+    {
+      key: "status",
+      label: "Status",
+      options: [
+        { label: "Hadir", value: "on_time" },
+        { label: "Terlambat", value: "late" },
+        { label: "Tidak hadir", value: "absent" },
+      ],
+    },
+    {
+      key: "absence_reason_id",
+      label: "Alasan tidak hadir",
+      type: "resource",
+      resourceEndpoint: "/attendance-absence-reasons",
+      resourcePlaceholder: "Pilih alasan",
+      visibleWhen: { key: "status", values: ["absent"] },
+    },
+    {
+      key: "absence_note",
+      label: "Catatan",
+      type: "textarea",
+      fullWidth: true,
+    },
     { key: "check_in_at", label: "Waktu masuk", type: "datetime-local" },
     { key: "check_out_at", label: "Waktu keluar", type: "datetime-local" },
     { key: "type", label: "Tipe", type: "hidden" },

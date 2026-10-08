@@ -14,6 +14,7 @@ import LearningResourcesPage from "@/pages/learning-resources/page";
 import QuizzesPage from "@/pages/quizzes/page";
 import QuizSessionsPage from "@/pages/quiz-sessions/page";
 import AttendancesPage from "@/pages/attendances/page";
+import AttendanceChartPage from "@/pages/attendances/chart-page";
 import TeacherAttendancePage from "@/pages/attendances/teacher-page";
 import StudentAttendanceCreatePage from "@/pages/attendances/student-create-page";
 import AbsenceReasonsPage from "@/pages/absence-reasons/page";
@@ -103,6 +104,7 @@ function App() {
           <Route path="/quiz-sessions/rankings" element={<PermissionRoute model="quiz-sessions"><QuizRankingPage /></PermissionRoute>} />
           {moduleFormRoutes("/quiz-sessions", QUIZ_SESSIONS_PAGE_CONFIG)}
           <Route path="/attendances" element={<PermissionRoute model="attendance-logs"><AttendancesPage /></PermissionRoute>} />
+          <Route path="/attendances/chart" element={<PermissionRoute model="attendance-logs"><AttendanceChartPage /></PermissionRoute>} />
           <Route path="/attendances/me" element={<PermissionRoute model="attendance-logs"><TeacherAttendancePage /></PermissionRoute>} />
           <Route
             path="/attendances/create"
