@@ -7,7 +7,7 @@ import { fetchLearningResources } from "./actions";
 import { LEARNING_RESOURCES_PAGE_CONFIG } from "./page.config";
 
 export default function LearningResourcesPage() {
-  const exportLearningResources = useCallback(async () => {
+  const exportLearningResources = useCallback(async (dateRange?: { from: string; to: string }) => {
     try {
       const institutionName = getAuthUser()?.institution?.name ?? "Institusi";
       const filename = "data_learning_resources";
@@ -27,6 +27,7 @@ export default function LearningResourcesPage() {
             pageSize: 500,
             limit: 0,
             filters: [
+              ...(dateRange ? [{ key: "created_at", operator: ">=", value: dateRange.from }, { key: "created_at", operator: "<=", value: dateRange.to }] : []),
               {
                 key: "type",
                 operator: "in",
@@ -63,7 +64,7 @@ export default function LearningResourcesPage() {
     <DefaultModulePage
       config={LEARNING_RESOURCES_PAGE_CONFIG}
       fetchPage={fetchLearningResources}
-      onExport={() => void exportLearningResources()}
+      onExport={(dateRange) => void exportLearningResources(dateRange)}
     />
   );
 }

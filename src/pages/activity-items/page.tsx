@@ -8,7 +8,7 @@ import { ACTIVITY_ITEMS_PAGE_CONFIG } from "./page.config";
 import { getCsrfToken } from "@/lib/auth/session";
 export default function ActivityItemsPage() {
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
-  const exportActivityItems = useCallback(async () => {
+  const exportActivityItems = useCallback(async (dateRange?: { from: string; to: string }) => {
     try {
       const institutionName = getAuthUser()?.institution?.name ?? "Institusi";
       const filename = "data_activity_items";
@@ -28,6 +28,7 @@ export default function ActivityItemsPage() {
             pageSize: 500,
             limit: 0,
             filters: [
+              ...(dateRange ? [{ key: "created_at", operator: ">=", value: dateRange.from }, { key: "created_at", operator: "<=", value: dateRange.to }] : []),
               {
                 key: "type",
                 operator: "in",
@@ -80,7 +81,7 @@ export default function ActivityItemsPage() {
       <DefaultModulePage
         config={ACTIVITY_ITEMS_PAGE_CONFIG}
         fetchPage={fetchActivityItems}
-        onExport={() => void exportActivityItems()}
+        onExport={(dateRange) => void exportActivityItems(dateRange)}
         onToolbarAction={(action) => {
           if (action.href !== "/activity-categories") return false;
           setCategoryManagerOpen(true);

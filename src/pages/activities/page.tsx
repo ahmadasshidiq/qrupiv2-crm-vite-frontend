@@ -7,7 +7,7 @@ import { fetchActivities } from "./actions";
 import { ACTIVITIES_PAGE_CONFIG } from "./page.config";
 
 export default function ActivitiesPage() {
-  const exportActivities = useCallback(async () => {
+  const exportActivities = useCallback(async (dateRange?: { from: string; to: string }) => {
     try {
       const institutionName = getAuthUser()?.institution?.name ?? "Institusi";
       const filename = "data_activities";
@@ -26,7 +26,7 @@ export default function ActivitiesPage() {
             filename,
             pageSize: 500,
             limit: 0,
-            filters: [],
+            filters: dateRange ? [{ key: "occurred_at", operator: ">=", value: dateRange.from }, { key: "occurred_at", operator: "<=", value: dateRange.to }] : [],
             column: [
               {
                 key: "activity_item",
@@ -94,7 +94,7 @@ export default function ActivitiesPage() {
     <DefaultModulePage
       config={ACTIVITIES_PAGE_CONFIG}
       fetchPage={fetchActivities}
-      onExport={() => void exportActivities()}
+      onExport={(dateRange) => void exportActivities(dateRange)}
     />
   );
 }

@@ -7,7 +7,7 @@ import { fetchAbsenceReasons } from "./actions";
 import { ABSENCE_REASONS_PAGE_CONFIG } from "./page.config";
 
 export default function AbsenceReasonsPage() {
-  const exportAbsenceReasons = useCallback(async () => {
+  const exportAbsenceReasons = useCallback(async (dateRange?: { from: string; to: string }) => {
     try {
       const institutionName = getAuthUser()?.institution?.name ?? "Institusi";
       const filename = "data_attendance_absence_reasons";
@@ -26,7 +26,7 @@ export default function AbsenceReasonsPage() {
             filename,
             pageSize: 500,
             limit: 0,
-            filters: [],
+            filters: dateRange ? [{ key: "created_at", operator: ">=", value: dateRange.from }, { key: "created_at", operator: "<=", value: dateRange.to }] : [],
             column: [
               { key: "name", label: "Nama Alasan" },
               { key: "description", label: "Deskripsi" },
@@ -58,7 +58,7 @@ export default function AbsenceReasonsPage() {
     <DefaultModulePage
       config={ABSENCE_REASONS_PAGE_CONFIG}
       fetchPage={fetchAbsenceReasons}
-      onExport={() => void exportAbsenceReasons()}
+      onExport={(dateRange) => void exportAbsenceReasons(dateRange)}
     />
   );
 }

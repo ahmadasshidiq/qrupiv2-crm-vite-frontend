@@ -7,7 +7,7 @@ import { fetchLearningGroups } from "./actions";
 import { LEARNING_GROUPS_PAGE_CONFIG } from "./page.config";
 
 export default function LearningGroupsPage() {
-  const exportLearningGroups = useCallback(async () => {
+  const exportLearningGroups = useCallback(async (dateRange?: { from: string; to: string }) => {
     try {
       const institutionName = getAuthUser()?.institution?.name ?? "Institusi";
       const filename = "data_learning_group";
@@ -26,7 +26,7 @@ export default function LearningGroupsPage() {
             filename,
             pageSize: 500,
             limit: 0,
-            filters: [],
+            filters: dateRange ? [{ key: "created_at", operator: ">=", value: dateRange.from }, { key: "created_at", operator: "<=", value: dateRange.to }] : [],
             column: [
               { key: "name", label: "Nama Grup Pembelajaran" },
               { key: "code", label: "Kode Grup" },
@@ -61,7 +61,7 @@ export default function LearningGroupsPage() {
     <DefaultModulePage
       config={LEARNING_GROUPS_PAGE_CONFIG}
       fetchPage={fetchLearningGroups}
-      onExport={() => void exportLearningGroups()}
+      onExport={(dateRange) => void exportLearningGroups(dateRange)}
     />
   );
 }

@@ -7,7 +7,7 @@ import { fetchActivityCategories } from "./actions";
 import { ACTIVITY_CATEGORIES_PAGE_CONFIG } from "./page.config";
 
 export default function ActivityCategoriesPage() {
-  const exportActivityCategories = useCallback(async () => {
+  const exportActivityCategories = useCallback(async (dateRange?: { from: string; to: string }) => {
     try {
       const institutionName = getAuthUser()?.institution?.name ?? "Institusi";
       const filename = "data_activity_categories";
@@ -26,7 +26,7 @@ export default function ActivityCategoriesPage() {
             filename,
             pageSize: 500,
             limit: 0,
-            filters: [],
+            filters: dateRange ? [{ key: "created_at", operator: ">=", value: dateRange.from }, { key: "created_at", operator: "<=", value: dateRange.to }] : [],
             column: [
               { key: "name", label: "Nama Kategori" },
               { key: "description", label: "Deskripsi" },
@@ -59,7 +59,7 @@ export default function ActivityCategoriesPage() {
     <DefaultModulePage
       config={ACTIVITY_CATEGORIES_PAGE_CONFIG}
       fetchPage={fetchActivityCategories}
-      onExport={() => void exportActivityCategories()}
+      onExport={(dateRange) => void exportActivityCategories(dateRange)}
     />
   );
 }

@@ -51,7 +51,7 @@ function AdminAttendancesPage() {
       fetchAttendances(page, limit, category, filters),
     [category],
   );
-  const exportAttendances = useCallback(async () => {
+  const exportAttendances = useCallback(async (dateRange?: { from: string; to: string }) => {
     try {
       const institutionName = getAuthUser()?.institution?.name ?? "Institusi";
       const isStudent = category === "student";
@@ -137,6 +137,12 @@ function AdminAttendancesPage() {
             limit: 0,
             filters: [
               { key: "type", operator: "=", value: isStudent ? "student" : "teacher" },
+              ...(dateRange
+                ? [
+                    { key: "occurred_at", operator: ">=", value: dateRange.from },
+                    { key: "occurred_at", operator: "<=", value: dateRange.to },
+                  ]
+                : []),
             ],
             column: columns,
           }),
@@ -171,7 +177,7 @@ function AdminAttendancesPage() {
       <DefaultModulePage
         config={config}
         fetchPage={fetchPage}
-        onExport={() => void exportAttendances()}
+        onExport={(dateRange) => void exportAttendances(dateRange)}
         onToolbarAction={(action) => {
           if (action.href === "#attendance-report") {
             setReportKey((value) => value + 1);

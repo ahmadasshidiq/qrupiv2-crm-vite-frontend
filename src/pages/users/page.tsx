@@ -41,7 +41,7 @@ export default function UsersPage() {
     [category],
   );
 
-  const exportUsers = useCallback(async () => {
+  const exportUsers = useCallback(async (dateRange?: { from: string; to: string }) => {
     try {
       const institutionName = getAuthUser()?.institution?.name ?? "Institusi";
       const isStudent = category === "student";
@@ -85,6 +85,7 @@ export default function UsersPage() {
             pageSize: 500,
             limit: 0,
             filters: [
+              ...(dateRange ? [{ key: "created_at", operator: ">=", value: dateRange.from }, { key: "created_at", operator: "<=", value: dateRange.to }] : []),
               isStudent
                 ? { key: "type", operator: "=", value: "student" }
                 : { key: "type", operator: "in", value: ["teacher", "staff", "admin"] },
@@ -112,7 +113,7 @@ export default function UsersPage() {
       <DefaultModulePage
         config={config}
         fetchPage={fetchPage}
-        onExport={() => void exportUsers()}
+        onExport={(dateRange) => void exportUsers(dateRange)}
         onImport={() => setImportOpen(true)}
       />
       <ImportDialog

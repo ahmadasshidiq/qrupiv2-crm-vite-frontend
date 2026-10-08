@@ -7,7 +7,7 @@ import { fetchQuizzes } from "./actions";
 import { QUIZZES_PAGE_CONFIG } from "./page.config";
 
 export default function QuizzesPage() {
-  const exportQuizzes = useCallback(async () => {
+  const exportQuizzes = useCallback(async (dateRange?: { from: string; to: string }) => {
     try {
       const institutionName = getAuthUser()?.institution?.name ?? "Institusi";
       const filename = "data_quizzes";
@@ -27,6 +27,7 @@ export default function QuizzesPage() {
             pageSize: 100,
             limit: 0,
             filters: [
+              ...(dateRange ? [{ key: "created_at", operator: ">=", value: dateRange.from }, { key: "created_at", operator: "<=", value: dateRange.to }] : []),
               {
                 key: "type",
                 operator: "in",
@@ -91,7 +92,7 @@ export default function QuizzesPage() {
     <DefaultModulePage
       config={QUIZZES_PAGE_CONFIG}
       fetchPage={fetchQuizzes}
-      onExport={() => void exportQuizzes()}
+      onExport={(dateRange) => void exportQuizzes(dateRange)}
     />
   );
 }
