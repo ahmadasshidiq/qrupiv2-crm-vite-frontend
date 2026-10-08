@@ -16,10 +16,34 @@ import { fetchLearningGroups } from "@/pages/learning-groups/actions";
 import { fetchAttendanceChart } from "./chart-actions";
 import type { AttendanceChartResponseDto } from "@/lib/dto/attendance-chart";
 
-const EMPTY = {
+type AttendanceFilters = {
+  type: "student" | "teacher";
+  start_date: string;
+  end_date: string;
+  learning_group_id: string;
+};
+
+function createDefaultFilters(): AttendanceFilters {
+  const today = new Date();
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  return {
+    type: "student",
+    start_date: formatDate(new Date(today.getFullYear(), today.getMonth(), 1)),
+    end_date: formatDate(today),
+    learning_group_id: "",
+  };
+}
+
+const EMPTY: AttendanceFilters = {
   type: "student" as "student" | "teacher",
-  start_date: "",
-  end_date: "",
+  start_date: createDefaultFilters().start_date,
+  end_date: createDefaultFilters().end_date,
   learning_group_id: "",
 };
 const STATUS = [
@@ -132,8 +156,8 @@ export default function AttendanceChartPage() {
             variant="ghost"
             size="sm"
             onClick={() => {
-              setDraft(EMPTY);
-              setFilters(EMPTY);
+              setDraft(createDefaultFilters());
+              setFilters(createDefaultFilters());
             }}
           >
             <RotateCcw className="size-4" /> Reset Filter
