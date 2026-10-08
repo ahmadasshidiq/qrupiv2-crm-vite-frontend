@@ -24,6 +24,27 @@ function formatNotificationDate(value: string) {
   }).format(new Date(value));
 }
 
+function sanitizeNotificationHtml(value: string) {
+  if (!value.includes("<")) return value;
+  const documentParser = new DOMParser();
+  const parsed = documentParser.parseFromString(value, "text/html");
+  parsed.querySelectorAll("script, style, iframe, object, embed, form").forEach((node) => node.remove());
+  parsed.querySelectorAll("*").forEach((element) => {
+    [...element.attributes].forEach((attribute) => {
+      if (attribute.name.toLowerCase().startsWith("on")) {
+        element.removeAttribute(attribute.name);
+      }
+    });
+    for (const attributeName of ["href", "src"]) {
+      const attribute = element.getAttribute(attributeName);
+      if (attribute && /^(javascript|data|vbscript):/i.test(attribute.trim())) {
+        element.removeAttribute(attributeName);
+      }
+    }
+  });
+  return parsed.body.innerHTML;
+}
+
 export function NotificationMenu() {
   const navigate = useNavigate();
   const [count, setCount] = useState(0);
@@ -132,8 +153,12 @@ export function NotificationMenu() {
                 <span className="block text-sm font-semibold">
                   {item.title}
                 </span>
-                <span className="mt-0.5 block text-xs text-zinc-600 dark:text-zinc-300">
-                  {item.message}
+                <span
+                  className="legal-content mt-0.5 block line-clamp-3 text-xs text-zinc-600 dark:text-zinc-300"
+                  dangerouslySetInnerHTML={{
+                    __html: sanitizeNotificationHtml(item.message),
+                  }}
+                >
                 </span>
                 <span className="mt-1 block text-[10px] text-zinc-400">
                   {formatNotificationDate(item.created_at)}

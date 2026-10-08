@@ -79,7 +79,7 @@ export function getAnnouncementsPageConfig(
       {
         key: "message",
         label: "Pesan",
-        type: "textarea",
+        type: "rich-text",
         required: true,
         fullWidth: true,
         placeholder: "Masukkan isi pengumuman",

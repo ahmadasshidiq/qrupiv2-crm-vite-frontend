@@ -153,7 +153,7 @@ const MODULE_BEHAVIORS: Record<string, ModuleBehavior> = {
     fields: [
       { key: "audience", label: "Tujuan penerima" },
       { key: "title", label: "Judul pengumuman" },
-      { key: "message", label: "Pesan", type: "textarea" },
+      { key: "message", label: "Pesan", type: "rich-text" },
     ],
   },
 };
