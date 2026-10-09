@@ -1,6 +1,5 @@
 import { Bell, CheckCheck, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -16,6 +15,13 @@ import {
   type NotificationDto,
 } from "@/lib/api/notifications";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function formatNotificationDate(value: string) {
   return new Intl.DateTimeFormat("id-ID", {
@@ -46,11 +52,12 @@ function sanitizeNotificationHtml(value: string) {
 }
 
 export function NotificationMenu() {
-  const navigate = useNavigate();
   const [count, setCount] = useState(0);
   const [items, setItems] = useState<NotificationDto[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedNotification, setSelectedNotification] =
+    useState<NotificationDto | null>(null);
 
   useEffect(() => {
     void fetchUnreadNotificationCount()
@@ -88,18 +95,11 @@ export function NotificationMenu() {
       );
       setCount((current) => Math.max(0, current - 1));
     }
-    const isAnnouncement = item.event_type.toLowerCase().includes("announcement");
-    const announcementId =
-      typeof item.data?.announcement_id === "string"
-        ? item.data.announcement_id
-        : item.id;
-    const target = isAnnouncement
-      ? `/announcements/${encodeURIComponent(announcementId)}/view`
-      : item.deeplink || item.web_url;
-    if (target?.startsWith("/")) {
-      setOpen(false);
-      navigate(target);
-    } else if (target) window.open(target, "_blank", "noopener,noreferrer");
+    setOpen(false);
+    setSelectedNotification({
+      ...item,
+      read_at: item.read_at ?? new Date().toISOString(),
+    });
   }
 
   async function handleReadAll() {
@@ -115,7 +115,8 @@ export function NotificationMenu() {
   }
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange}>
+    <>
+      <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger
         className="group/button relative inline-flex size-8 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-transparent text-xs shadow-xs transition-all outline-none hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-ring/30 dark:border-white/10 dark:hover:bg-white/10 [&_svg]:size-4"
         aria-label="Notifikasi"
@@ -178,6 +179,37 @@ export function NotificationMenu() {
           ))}
         </div>
       </PopoverContent>
-    </Popover>
+      </Popover>
+      <Dialog
+      open={Boolean(selectedNotification)}
+      onOpenChange={(value) => !value && setSelectedNotification(null)}
+    >
+      <DialogContent
+        className="w-[calc(100%_-_2rem)] max-w-lg rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-zinc-900"
+        overlayClassName="bg-black/50 backdrop-blur-sm"
+      >
+        <DialogHeader className="pr-8">
+          <DialogTitle className="text-lg font-semibold leading-7">
+            {selectedNotification?.title}
+          </DialogTitle>
+          <DialogDescription>
+            {selectedNotification?.created_at
+              ? formatNotificationDate(selectedNotification.created_at)
+              : ""}
+          </DialogDescription>
+        </DialogHeader>
+        {selectedNotification?.message ? (
+          <div
+            className="legal-content max-h-[60vh] overflow-y-auto rounded-xl bg-zinc-50 px-4 py-3 text-sm leading-7 text-zinc-700 dark:bg-white/5 dark:text-zinc-300"
+            dangerouslySetInnerHTML={{
+              __html: sanitizeNotificationHtml(selectedNotification.message),
+            }}
+          />
+        ) : (
+          <p className="text-sm text-zinc-500">Tidak ada isi pesan.</p>
+        )}
+      </DialogContent>
+      </Dialog>
+    </>
   );
 }

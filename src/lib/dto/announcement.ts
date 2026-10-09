@@ -13,6 +13,10 @@ export type AnnouncementDto = {
   message: string;
   created_by?: string | null;
   created_at: string;
+  send_at?: string | null;
+  repeat_type?: "none" | "daily" | "weekly" | "monthly";
+  repeat_until?: string | null;
+  status?: "scheduled" | "published" | "sent";
 };
 
 export type CreateAnnouncementPayload = {
@@ -20,4 +24,7 @@ export type CreateAnnouncementPayload = {
   target_id?: string;
   title: string;
   message: string;
+  send_at?: string;
+  repeat_type: "none" | "daily" | "weekly" | "monthly";
+  repeat_until?: string;
 };

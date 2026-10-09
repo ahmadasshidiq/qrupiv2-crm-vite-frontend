@@ -1,6 +1,14 @@
 import type { BackendModuleConfig } from "@/components/backend-module-page";
 import type { AnnouncementAudience } from "@/lib/dto/announcement";
 
+function toJakartaIso(value: unknown) {
+  if (!value) return undefined;
+  const localValue = String(value);
+  return localValue.length === 16
+    ? `${localValue}:00+07:00`
+    : localValue;
+}
+
 export function getAnnouncementsPageConfig(
   role: string,
   userId?: string,
@@ -38,6 +46,7 @@ export function getAnnouncementsPageConfig(
       { key: "audience", title: "Tujuan penerima" },
       { key: "title", title: "Judul" },
       { key: "message", title: "Pesan", type: "html" },
+      { key: "status", title: "Status" },
       { key: "created_at", title: "Dibuat", type: "date" },
     ],
     editableFields: [
@@ -84,12 +93,45 @@ export function getAnnouncementsPageConfig(
         placeholder: "Masukkan isi pengumuman",
         helperText: "Masukkan informasi yang sesuai.",
       },
+      {
+        key: "send_at",
+        label: "Jadwalkan pengiriman",
+        type: "datetime-local",
+        helperText: "Kosongkan untuk mengirim segera.",
+      },
+      {
+        key: "repeat_type",
+        label: "Pengulangan",
+        options: [
+          { label: "Tidak berulang", value: "none" },
+          { label: "Harian", value: "daily" },
+          { label: "Mingguan", value: "weekly" },
+          { label: "Bulanan", value: "monthly" },
+        ],
+        required: true,
+        helperText:
+          "Pengulangan akan dilakukan sesuai jam pengumuman pertama dikirimkan.",
+      },
+      {
+        key: "repeat_until",
+        label: "Pengulangan sampai",
+        type: "datetime-local",
+        visibleWhen: {
+          key: "repeat_type",
+          values: ["daily", "weekly", "monthly"],
+        },
+      },
     ],
     createPayload: (values) => ({
       audience: values.audience,
       ...(values.target_id ? { target_id: values.target_id } : {}),
       title: values.title,
       message: values.message,
+      repeat_type: String(values.repeat_type || "none"),
+      ...(values.send_at ? { send_at: toJakartaIso(values.send_at) } : {}),
+      ...(values.repeat_until
+        ? { repeat_until: toJakartaIso(values.repeat_until) }
+        : {}),
     }),
   };
 }

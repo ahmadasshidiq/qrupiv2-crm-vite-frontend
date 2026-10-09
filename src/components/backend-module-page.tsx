@@ -353,7 +353,7 @@ function DefaultModulePageContent({
     canShowAction("filter") && hasAnyPermission(["get", "get-all"]);
   const canImport = canShowAction("import") && hasPermission(model, "import");
   const canExport =
-    canShowAction("export") && hasAnyPermission(["export", "get", "get-all"]);
+    canShowAction("export") && hasPermission(model, "export");
   const [items, setItems] = useState<ApiRecordDto[]>([]);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
