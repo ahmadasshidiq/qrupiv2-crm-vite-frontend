@@ -37,7 +37,7 @@ export function getAnnouncementsPageConfig(
     fields: [
       { key: "audience", title: "Tujuan penerima" },
       { key: "title", title: "Judul" },
-      { key: "message", title: "Pesan" },
+      { key: "message", title: "Pesan", type: "html" },
       { key: "created_at", title: "Dibuat", type: "date" },
     ],
     editableFields: [

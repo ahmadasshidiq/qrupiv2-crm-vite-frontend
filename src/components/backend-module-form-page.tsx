@@ -84,6 +84,10 @@ function BackendModuleFormPageContent({
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const behavior = getModuleBehavior(config);
+  const resourceEndpoint =
+    config.behaviorKey === "Pengumuman"
+      ? "/notifications/announcements"
+      : behavior.endpoint;
   const fields = config.editableFields ?? behavior.fields;
   const [record, setRecord] = useState<ApiRecordDto | null>(null);
   const [loading, setLoading] = useState(mode !== "create");
@@ -94,7 +98,7 @@ function BackendModuleFormPageContent({
   useEffect(() => {
     if (mode === "create" || !id) return;
     let active = true;
-    void fetchResourceById(behavior.endpoint, id)
+    void fetchResourceById(resourceEndpoint, id)
       .then((data) => {
         if (!active) return;
         setRecord(data);
@@ -112,7 +116,7 @@ function BackendModuleFormPageContent({
     return () => {
       active = false;
     };
-  }, [behavior.endpoint, config.title, id, mode]);
+  }, [config.title, id, mode, resourceEndpoint]);
 
   const pageTitle =
     mode === "create"

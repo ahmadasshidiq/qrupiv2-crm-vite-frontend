@@ -88,7 +88,14 @@ export function NotificationMenu() {
       );
       setCount((current) => Math.max(0, current - 1));
     }
-    const target = item.deeplink || item.web_url;
+    const isAnnouncement = item.event_type.toLowerCase().includes("announcement");
+    const announcementId =
+      typeof item.data?.announcement_id === "string"
+        ? item.data.announcement_id
+        : item.id;
+    const target = isAnnouncement
+      ? `/announcements/${encodeURIComponent(announcementId)}/view`
+      : item.deeplink || item.web_url;
     if (target?.startsWith("/")) {
       setOpen(false);
       navigate(target);

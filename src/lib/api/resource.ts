@@ -15,13 +15,14 @@ export async function fetchResourceById(endpoint: string, id: string) {
   const pendingRequest = pendingResourceRequests.get(cacheKey);
   if (pendingRequest) return pendingRequest;
 
-  const request = apiRequest<{ data: ApiRecordDto }>(cacheKey)
+  const request = apiRequest<{ data?: ApiRecordDto } & ApiRecordDto>(cacheKey)
     .then((response) => {
+      const data = response.data ?? response;
       resourceCache.set(cacheKey, {
-        data: response.data,
+        data,
         expiresAt: Date.now() + 2_000,
       });
-      return response.data;
+      return data;
     })
     .finally(() => {
       pendingResourceRequests.delete(cacheKey);

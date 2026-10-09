@@ -407,6 +407,8 @@ function DefaultModulePageContent({
               return "-";
             if (field.type === "date")
               return new Date(String(value)).toLocaleString("id-ID");
+            if (field.type === "html")
+              return String(value).replace(/<[^>]*>/g, "").trim() || "-";
             if (typeof value === "boolean") return value ? "Ya" : "Tidak";
             return String(value);
           },
