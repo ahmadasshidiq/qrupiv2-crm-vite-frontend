@@ -29,7 +29,7 @@ export async function fetchNotifications() {
 }
 
 export function markNotificationRead(id: string) {
-  return apiRequest(`/notifications/${encodeURIComponent(id)}/read`, {
+  return apiRequest(`/notifications/announcements/${encodeURIComponent(id)}`, {
     method: "PATCH",
   });
 }
