@@ -123,7 +123,7 @@ export const QUIZ_SESSIONS_PAGE_CONFIG: BackendModuleConfig = {
   },
   actions: {
     view: true,
-    create: true,
+    create: false,
     edit: true,
     archive: true,
     delete: true,

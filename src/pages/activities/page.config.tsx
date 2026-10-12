@@ -1,4 +1,5 @@
 import type { BackendModuleConfig } from "@/components/backend-module-page";
+import { Badge } from "@/components/ui/badge";
 import { truncateDescription } from "@/lib/helper/text";
 import { ChartSpline } from "lucide-react";
 export const ACTIVITIES_PAGE_CONFIG: BackendModuleConfig = {
@@ -82,7 +83,31 @@ export const ACTIVITIES_PAGE_CONFIG: BackendModuleConfig = {
     { key: "user_name", title: "Nama" },
     { key: "activity_item_name", title: "Aktivitas" },
     { key: "category_name", title: "Kategori" },
-    { key: "learning_group_name", title: "Grup pembelajaran" },
+    {
+      key: "activity_item_type",
+      title: "Tipe",
+      formatter: (value) => {
+        const isViolation = value === "violation";
+
+        return (
+          <Badge
+            className={
+              isViolation
+                ? "px-4 py-1 text-xs bg-red-50 text-red-700 ring-red-200 dark:bg-red-950/50 dark:text-red-300 dark:ring-red-900"
+                : "px-4 py-1 text-xs bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-900"
+            }
+          >
+            {isViolation ? "Pelanggaran" : "Aktivitas positif"}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "learning_group_name",
+      title: "Grup pembelajaran",
+      formatter: (value) =>
+        String(value ?? "").trim() || "Seluruh Grup Belajar",
+    },
     {
       key: "description",
       title: "Catatan",

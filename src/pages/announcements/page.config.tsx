@@ -1,5 +1,7 @@
 import type { BackendModuleConfig } from "@/components/backend-module-page";
+import { Badge } from "@/components/ui/badge";
 import type { AnnouncementAudience } from "@/lib/dto/announcement";
+import { truncateDescription } from "@/lib/helper/text";
 
 function toJakartaIso(value: unknown) {
   if (!value) return undefined;
@@ -39,14 +41,59 @@ export function getAnnouncementsPageConfig(
       create: true,
       filter: false,
       edit: false,
-      delete: false,
+      delete: true,
     },
     createEndpoint: "/notifications/announcements",
     fields: [
       { key: "audience", title: "Tujuan penerima" },
       { key: "title", title: "Judul" },
-      { key: "message", title: "Pesan", type: "html" },
-      { key: "status", title: "Status" },
+      {
+        key: "message",
+        title: "Pesan",
+        formatter: (value) => {
+          const plainText = String(value ?? "")
+            .replace(/<[^>]*>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+
+          return (
+            <span className="block max-w-64 truncate" title={plainText}>
+              {truncateDescription(plainText)}
+            </span>
+          );
+        },
+      },
+      {
+        key: "status",
+        title: "Status",
+        formatter: (value) => {
+          const status = String(value ?? "");
+          const labels: Record<string, string> = {
+            draft: "Draft",
+            scheduled: "Scheduled",
+            published: "Published",
+            sent: "Sent",
+          };
+          const styles: Record<string, string> = {
+            draft:
+              "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:ring-amber-900",
+            scheduled:
+              "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-900",
+            published:
+              "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-900",
+            sent:
+              "bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:ring-violet-900",
+          };
+
+          return (
+            <Badge
+              className={`px-4 py-1 text-xs ${styles[status] ?? "bg-slate-100 text-slate-600 ring-slate-500/20"}`}
+            >
+              {labels[status] ?? (status || "-")}
+            </Badge>
+          );
+        },
+      },
       { key: "created_at", title: "Dibuat", type: "date" },
     ],
     editableFields: [
