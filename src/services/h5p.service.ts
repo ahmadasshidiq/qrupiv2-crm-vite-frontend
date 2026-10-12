@@ -18,7 +18,7 @@ const basePath = baseUrl.startsWith("/") ? baseUrl : new URL(baseUrl).pathname;
 
 function resolveH5PUrls<T>(value: T, insideParams = false): T {
   if (typeof value === "string") {
-    if (insideParams && value.startsWith(`${basePath.slice(1)}/`)) {
+    if (value.startsWith(`${basePath.slice(1)}/`)) {
       return `/${value}` as T;
     }
     if (!value.startsWith("/")) return value as T;
