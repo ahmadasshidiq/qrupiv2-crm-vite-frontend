@@ -43,7 +43,6 @@ import {
 import {
   Bar,
   BarChart,
-  CartesianGrid,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
@@ -347,9 +346,8 @@ function InstitutionActivityCharts({
             <ChartContainer>
               <BarChart
                 data={chartTrend}
-                margin={{ top: 8, right: 8, left: -20, bottom: 12 }}
+                margin={{ top: 8, right: 12, left: 0, bottom: 12 }}
               >
-                <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis
                   dataKey="date"
                   tickLine={false}
@@ -362,6 +360,7 @@ function InstitutionActivityCharts({
                   tick={{ fontSize: 12 }}
                 />
                 <YAxis
+                  hide
                   allowDecimals={false}
                   tickLine={false}
                   axisLine={false}
@@ -372,13 +371,15 @@ function InstitutionActivityCharts({
                   dataKey="positive_activities"
                   name="Positif"
                   fill="#10b981"
-                  radius={[20, 20, 0, 0]}
+                  barSize={16}
+                  radius={[8, 8, 0, 0]}
                 />
                 <Bar
                   dataKey="violation_activities"
                   name="Pelanggaran"
                   fill="#f43f5e"
-                  radius={[20, 20, 0, 0]}
+                  barSize={16}
+                  radius={[8, 8, 0, 0]}
                 />
               </BarChart>
             </ChartContainer>

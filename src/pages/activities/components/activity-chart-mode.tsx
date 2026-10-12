@@ -452,7 +452,7 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
               <ChartContainer>
                 <BarChart
                   data={chartItems}
-                  margin={{ top: 4, right: 8, left: -20, bottom: 14 }}
+                  margin={{ top: 4, right: 12, left: 0, bottom: 14 }}
                 >
                   <XAxis
                     dataKey="label"
@@ -467,7 +467,7 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
                     tick={{ fontSize: 10 }}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="total" name="Catatan" radius={[6, 6, 0, 0]}>
+                  <Bar dataKey="total" name="Catatan" barSize={18} radius={[8, 8, 0, 0]}>
                     {chartItems.map((item) => (
                       <Cell key={item.label} fill={item.color} />
                     ))}
@@ -619,7 +619,7 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
             <ChartContainer>
               <BarChart
                 data={dailyChartItems}
-                margin={{ top: 4, right: 8, left: 8, bottom: 14 }}
+                margin={{ top: 4, right: 12, left: 0, bottom: 14 }}
               >
                 <XAxis
                   dataKey="label"
@@ -639,7 +639,8 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
                     dataKey="positive"
                     name="Positif"
                     fill="#10b981"
-                    radius={[6, 6, 0, 0]}
+                    barSize={16}
+                    radius={[8, 8, 0, 0]}
                   />
                 ) : null}
                 {hasDailyViolation ? (
@@ -647,7 +648,8 @@ export function ActivityChartMode({ onBack }: { onBack: () => void }) {
                     dataKey="violation"
                     name="Pelanggaran"
                     fill="#f43f5e"
-                    radius={[6, 6, 0, 0]}
+                    barSize={16}
+                    radius={[8, 8, 0, 0]}
                   />
                 ) : null}
               </BarChart>
