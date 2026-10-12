@@ -557,16 +557,6 @@ const SEVERITY_STYLE: Record<
   },
 };
 
-const BAR_COLORS = [
-  ["#2563eb", "#22d3ee"],
-  ["#7c3aed", "#e879f9"],
-  ["#059669", "#2dd4bf"],
-  ["#ea580c", "#fbbf24"],
-  ["#db2777", "#fb7185"],
-  ["#0891b2", "#67e8f9"],
-  ["#4f46e5", "#a5b4fc"],
-] as const;
-
 function normalizeRole(
   value: unknown,
   user: ReturnType<typeof getAuthUser>,
@@ -640,7 +630,6 @@ function MetricDistribution({
     label: METRIC_META[key].label,
     value: summary[key],
   }));
-  const max = Math.max(1, ...bars.map((b) => b.value));
   return (
     <div className="rounded-2xl border border-zinc-200/80 bg-white p-6 dark:border-white/10 dark:bg-white/[.03]">
       <div className="flex justify-between">
@@ -650,30 +639,32 @@ function MetricDistribution({
         </div>
         <Activity className="size-5 text-blue-500" />
       </div>
-      <div className="mt-6 flex h-56 flex-wrap items-end gap-3 sm:gap-4">
-        {bars.map((bar, index) => (
-          <div
-            key={bar.key}
-            className="flex min-w-14 flex-1 flex-col items-center gap-2"
+      <div className="mt-6 h-64">
+        <ChartContainer>
+          <BarChart
+            data={bars}
+            margin={{ top: 8, right: 12, left: 0, bottom: 12 }}
           >
-            <span className="text-[10px] font-semibold text-zinc-500">
-              {fmt.format(bar.value)}
-            </span>
-            <div className="flex h-40 w-full items-end rounded-lg bg-zinc-100 p-1 dark:bg-white/5">
-              <div
-                className="w-full rounded-md"
-                style={{
-                  minHeight: 12,
-                  height: `${Math.max(12, (bar.value / max) * 100)}%`,
-                  background: `linear-gradient(180deg, ${BAR_COLORS[index % BAR_COLORS.length][1]}, ${BAR_COLORS[index % BAR_COLORS.length][0]})`,
-                }}
-              />
-            </div>
-            <span className="line-clamp-2 text-center text-[10px] text-zinc-500">
-              {bar.label}
-            </span>
-          </div>
-        ))}
+            <XAxis
+              dataKey="label"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              interval={0}
+              tick={{ fontSize: 11 }}
+              height={42}
+            />
+            <YAxis hide allowDecimals={false} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar
+              dataKey="value"
+              name="Jumlah"
+              fill="#2563eb"
+              barSize={28}
+              radius={[8, 8, 0, 0]}
+            />
+          </BarChart>
+        </ChartContainer>
       </div>
     </div>
   );
@@ -1198,6 +1189,15 @@ export function InstitutionMapPanel({
       ? [{ ...item, latitude, longitude }]
       : [];
   });
+  const mapCenter: [number, number] = institutions.length
+    ? [
+        institutions.reduce((sum, item) => sum + item.latitude, 0) /
+          institutions.length,
+        institutions.reduce((sum, item) => sum + item.longitude, 0) /
+          institutions.length,
+      ]
+    : [-2.5, 118];
+  const mapZoom = institutions.length ? 8 : 4;
   return (
     <section className="rounded-2xl border border-zinc-200/80 bg-white p-6 dark:border-white/10 dark:bg-white/[.03]">
       <div className="flex items-start justify-between gap-3">
@@ -1211,8 +1211,8 @@ export function InstitutionMapPanel({
       </div>
       <div className="relative mt-5 overflow-hidden rounded-xl border border-blue-100 bg-sky-50 dark:border-blue-950/50 dark:bg-sky-950/20">
         <MapContainer
-          center={[-2.5, 118]}
-          zoom={4}
+          center={mapCenter}
+          zoom={mapZoom}
           className="dashboard-map h-80 w-full"
           scrollWheelZoom
         >
@@ -1356,9 +1356,13 @@ export function DashboardContent() {
 
   useEffect(() => {
     const masterTask = window.setTimeout(() => {
+      const categoryTask =
+        getRoleName(user) === "dinas_pendidikan" || getRoleName(user) === "dinas"
+          ? Promise.resolve({ items: [] as ApiRecordDto[] })
+          : fetchActivityCategories(1, 500);
       void Promise.all([
         fetchLearningGroups(1, 500, { "lg.status": "active" }),
-        fetchActivityCategories(1, 500),
+        categoryTask,
       ])
         .then(([groups, categories]) => {
           setFilterLearningGroups(groups.items);
@@ -1691,35 +1695,37 @@ export function DashboardContent() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="dashboard-category">Kategori aktivitas</Label>
-              <Select
-                value={filters.categoryId || undefined}
-                onValueChange={(value) =>
-                  setFilters((current) => ({
-                    ...current,
-                    categoryId: !value || value === "all" ? "" : value,
-                  }))
-                }
-              >
-                <SelectTrigger id="dashboard-category" className="!h-9 w-full">
-                  <SelectValue>
-                    {selectedCategory?.name ?? "Semua kategori"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua kategori</SelectItem>
-                  {availableCategories.map((category) => (
-                    <SelectItem key={String(category.id)} value={String(category.id)}>
-                      {String(
-                        category.name ??
-                          ("title" in category ? category.title : "Kategori"),
-                      )}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {role !== "Dinas Pendidikan" ? (
+              <div className="space-y-2">
+                <Label htmlFor="dashboard-category">Kategori aktivitas</Label>
+                <Select
+                  value={filters.categoryId || undefined}
+                  onValueChange={(value) =>
+                    setFilters((current) => ({
+                      ...current,
+                      categoryId: !value || value === "all" ? "" : value,
+                    }))
+                  }
+                >
+                  <SelectTrigger id="dashboard-category" className="!h-9 w-full">
+                    <SelectValue>
+                      {selectedCategory?.name ?? "Semua kategori"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua kategori</SelectItem>
+                    {availableCategories.map((category) => (
+                      <SelectItem key={String(category.id)} value={String(category.id)}>
+                        {String(
+                          category.name ??
+                            ("title" in category ? category.title : "Kategori"),
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <Button
@@ -1785,6 +1791,11 @@ export function DashboardContent() {
             <InstitutionActivityCharts data={dashboard.data ?? {}} />
           </AdminInstitusiDashboard>
         </>
+      ) : role === "Dinas Pendidikan" ? (
+        <>
+          <InstitutionMapPanel data={dashboard.data ?? {}} />
+          <InstitutionActivityCharts data={dashboard.data ?? {}} />
+        </>
       ) : role === "Instruktur" ? (
         <InstructorDashboard
           summary={summary as unknown as Record<string, unknown>}
@@ -1819,6 +1830,7 @@ export function DashboardContent() {
       )}
 
       {role !== "Super Admin" &&
+      role !== "Dinas Pendidikan" &&
       !isPelajar &&
       summary.quiz_rankings_available ? (
         <RankingsPanel rankings={rankings} />

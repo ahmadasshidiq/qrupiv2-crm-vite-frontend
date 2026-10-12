@@ -185,7 +185,7 @@ export function NotificationMenu() {
       onOpenChange={(value) => !value && setSelectedNotification(null)}
     >
       <DialogContent
-        className="w-[calc(100%_-_2rem)] max-w-lg rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-zinc-900"
+        className="w-[calc(100%_-_2rem)] max-w-2xl rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-zinc-900 sm:!max-w-2xl"
         overlayClassName="bg-black/50 backdrop-blur-sm"
       >
         <DialogHeader className="pr-8">
