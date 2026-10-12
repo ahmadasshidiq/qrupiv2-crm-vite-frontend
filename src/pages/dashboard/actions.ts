@@ -1,7 +1,13 @@
 import { apiRequest } from "@/lib/api/client";
 import { getAuthUser, getRoleName } from "@/lib/auth/session";
 import type { DashboardResponseDto } from "@/lib/dto/dashboard";
-export type DashboardFilters = { period: string; startDate: string; endDate: string; learningGroupId?: string; categoryId?: string };
+export type DashboardFilters = {
+  period: string;
+  startDate: string;
+  endDate: string;
+  learningGroupId?: string;
+  categoryId?: string;
+};
 
 function getDashboardEndpoint() {
   const user = getAuthUser();
@@ -43,9 +49,12 @@ export function fetchDashboard(filters?: DashboardFilters) {
   const params = new URLSearchParams();
   if (filters?.startDate) params.set("start_date", filters.startDate);
   if (filters?.endDate) params.set("end_date", filters.endDate);
-  if (filters?.learningGroupId) params.set("learning_group_id", filters.learningGroupId);
+  if (filters?.learningGroupId)
+    params.set("learning_group_id", filters.learningGroupId);
   if (filters?.categoryId) params.set("category_id", filters.categoryId);
   const query = params.toString();
   const endpoint = getDashboardEndpoint();
-  return apiRequest<DashboardResponseDto>(`${endpoint}${query ? `?${query}` : ""}`);
+  return apiRequest<DashboardResponseDto>(
+    `${endpoint}${query ? `?${query}` : ""}`,
+  );
 }

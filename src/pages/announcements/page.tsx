@@ -8,6 +8,21 @@ import { getAnnouncementsPageConfig } from "./page.config";
 export default function AnnouncementsPage() {
   const user = getAuthUser();
   const role = getRoleName(user);
-  const config = useMemo(() => getAnnouncementsPageConfig(role, user?.id), [role, user?.id]);
-  return <DefaultModulePage config={config} fetchPage={(page, limit, filters) => fetchPaginated<ApiRecordDto>("/notifications/announcements", page, limit, filters)} />;
+  const config = useMemo(
+    () => getAnnouncementsPageConfig(role, user?.id),
+    [role, user?.id],
+  );
+  return (
+    <DefaultModulePage
+      config={config}
+      fetchPage={(page, limit, filters) =>
+        fetchPaginated<ApiRecordDto>(
+          "/notifications/announcements",
+          page,
+          limit,
+          filters,
+        )
+      }
+    />
+  );
 }

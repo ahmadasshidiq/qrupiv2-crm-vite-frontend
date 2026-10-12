@@ -27,7 +27,12 @@ import {
   MAIN_NAVIGATION,
 } from "../page.config";
 import type { NavigationItem } from "../types";
-import { canReadModel, getAuthUser, getRoleName, clearSession } from "@/lib/auth/session";
+import {
+  canReadModel,
+  getAuthUser,
+  getRoleName,
+  clearSession,
+} from "@/lib/auth/session";
 import { apiRequest } from "@/lib/api/client";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
@@ -37,7 +42,8 @@ export function AppSidebar() {
   const isDark = resolvedTheme === "dark";
   const navigate = useNavigate();
   const authUser = getAuthUser();
-  const userIdentity = `${authUser?.type ?? ""} ${getRoleName(authUser)}`.toLowerCase();
+  const userIdentity =
+    `${authUser?.type ?? ""} ${getRoleName(authUser)}`.toLowerCase();
   const isSelfAttendance =
     userIdentity.includes("teacher") ||
     userIdentity.includes("instructor") ||
@@ -100,7 +106,10 @@ export function AppSidebar() {
       <SidebarContent className="px-2 py-4 group-data-[collapsible=icon]:px-0">
         <NavigationGroup label="Workspace" items={MAIN_NAVIGATION} />
         <NavigationGroup label="Insight & sistem" items={insightNavigation} />
-        <NavigationGroup label="Administrasi" items={ADMINISTRATION_NAVIGATION} />
+        <NavigationGroup
+          label="Administrasi"
+          items={ADMINISTRATION_NAVIGATION}
+        />
       </SidebarContent>
       <SidebarFooter className="border-t border-zinc-200/70 p-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0 dark:border-white/10">
         <ThemeToggle />
@@ -142,7 +151,8 @@ function NavigationGroup({
     .map((item) => ({
       ...item,
       children: item.children?.filter(
-        (child) => child.href.endsWith("/me") || canReadModel(modelFromHref(child.href)),
+        (child) =>
+          child.href.endsWith("/me") || canReadModel(modelFromHref(child.href)),
       ),
     }))
     .filter(

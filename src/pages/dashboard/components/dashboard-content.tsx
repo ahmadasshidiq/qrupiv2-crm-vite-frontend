@@ -1287,7 +1287,9 @@ export function DashboardContent() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [filterLearningGroups, setFilterLearningGroups] = useState<ApiRecordDto[]>([]);
+  const [filterLearningGroups, setFilterLearningGroups] = useState<
+    ApiRecordDto[]
+  >([]);
   const [filterCategories, setFilterCategories] = useState<ApiRecordDto[]>([]);
   const [filters, setFilters] = useState<DashboardFilters>({
     period: "custom",
@@ -1327,7 +1329,8 @@ export function DashboardContent() {
         dashboardData.data = {
           ...currentData,
           activities:
-            (Array.isArray(currentData.activities) && currentData.activities.length) ||
+            (Array.isArray(currentData.activities) &&
+              currentData.activities.length) ||
             currentData.activities
               ? currentData.activities
               : activityChart.activities_by_item,
@@ -1357,7 +1360,8 @@ export function DashboardContent() {
   useEffect(() => {
     const masterTask = window.setTimeout(() => {
       const categoryTask =
-        getRoleName(user) === "dinas_pendidikan" || getRoleName(user) === "dinas"
+        getRoleName(user) === "dinas_pendidikan" ||
+        getRoleName(user) === "dinas"
           ? Promise.resolve({ items: [] as ApiRecordDto[] })
           : fetchActivityCategories(1, 500);
       void Promise.all([
@@ -1480,7 +1484,9 @@ export function DashboardContent() {
       (ranking) => ranking.key === "top_institutions_by_groups",
     )?.items,
   };
-  const dashboardLearningGroups = insightList(dashboard.data ?? {}, ["learning_groups"]);
+  const dashboardLearningGroups = insightList(dashboard.data ?? {}, [
+    "learning_groups",
+  ]);
   const learningGroups = dashboardLearningGroups.length
     ? dashboardLearningGroups
     : filterLearningGroups;
@@ -1707,7 +1713,10 @@ export function DashboardContent() {
                     }))
                   }
                 >
-                  <SelectTrigger id="dashboard-category" className="!h-9 w-full">
+                  <SelectTrigger
+                    id="dashboard-category"
+                    className="!h-9 w-full"
+                  >
                     <SelectValue>
                       {selectedCategory?.name ?? "Semua kategori"}
                     </SelectValue>
@@ -1715,7 +1724,10 @@ export function DashboardContent() {
                   <SelectContent>
                     <SelectItem value="all">Semua kategori</SelectItem>
                     {availableCategories.map((category) => (
-                      <SelectItem key={String(category.id)} value={String(category.id)}>
+                      <SelectItem
+                        key={String(category.id)}
+                        value={String(category.id)}
+                      >
                         {String(
                           category.name ??
                             ("title" in category ? category.title : "Kategori"),
