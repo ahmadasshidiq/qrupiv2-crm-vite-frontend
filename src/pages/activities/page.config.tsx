@@ -105,8 +105,13 @@ export const ACTIVITIES_PAGE_CONFIG: BackendModuleConfig = {
     {
       key: "learning_group_name",
       title: "Grup pembelajaran",
-      formatter: (value) =>
-        String(value ?? "").trim() || "Seluruh Grup Belajar",
+      formatter: (value) => {
+        const learningGroupName = String(value ?? "").trim();
+
+        return !learningGroupName || learningGroupName === "-"
+          ? "Seluruh Grup Belajar"
+          : learningGroupName;
+      },
     },
     {
       key: "description",
