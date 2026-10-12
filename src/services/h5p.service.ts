@@ -14,23 +14,8 @@ const baseUrl = (import.meta.env.VITE_H5P_BASE_URL ?? "/h5p").replace(
   "",
 );
 const collectionUrl = `${baseUrl}/`;
-const basePath = baseUrl.startsWith("/") ? baseUrl : new URL(baseUrl).pathname;
 
 function resolveH5PUrls<T>(value: T, insideParams = false): T {
-  if (typeof value === "string") {
-    if (value.startsWith(`${basePath.slice(1)}/`)) {
-      return `/${value}` as T;
-    }
-    if (!value.startsWith("/")) return value as T;
-    if (insideParams && value.startsWith(`${basePath}/`)) {
-      return value.slice(basePath.length) as T;
-    }
-
-    const resolved = value.startsWith(`${basePath}/`)
-      ? value
-      : `${basePath}${value}`;
-    return resolved as T;
-  }
   if (Array.isArray(value)) {
     return value.map((item) => resolveH5PUrls(item, insideParams)) as T;
   }
