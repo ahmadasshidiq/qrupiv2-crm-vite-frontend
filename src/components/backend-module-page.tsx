@@ -90,8 +90,12 @@ export type BackendModuleConfig = {
   editableFields?: ModuleFormField[];
   multipart?: boolean;
   createEndpoint?: string;
+  updateEndpoint?: string;
+  updateMethod?: "PUT" | "PATCH";
+  deleteEndpoint?: string;
   createPayload?: (values: Record<string, unknown>) => Record<string, unknown>;
   updatePayload?: (values: Record<string, unknown>) => Record<string, unknown>;
+  canEditRecord?: (record: ApiRecordDto) => boolean;
   exportDateField?: string;
 };
 
@@ -896,7 +900,7 @@ function DefaultModulePageContent({
                                   <Eye />
                                 </Button>
                               ) : null}
-                              {canEdit ? (
+                              {canEdit && (config.canEditRecord?.(record) ?? true) ? (
                                 <Button
                                   variant="ghost"
                                   size="icon-sm"
@@ -965,7 +969,7 @@ function DefaultModulePageContent({
                 <Eye className="size-3.5" />
               </Button>
             ) : null}
-            {canEdit ? (
+            {canEdit && (config.canEditRecord?.(record) ?? true) ? (
               <Button
                 variant="ghost"
                 size="icon"
@@ -1086,7 +1090,10 @@ function DefaultModulePageContent({
     if (!selectedRecord?.id) return;
     setSaving(true);
     try {
-      await deleteResource(behavior.endpoint, selectedRecord.id);
+      await deleteResource(
+        config.deleteEndpoint ?? behavior.endpoint,
+        selectedRecord.id,
+      );
       setDeleteOpen(false);
       toast.success(`${config.title} berhasil dihapus permanen.`);
       await fetchData();

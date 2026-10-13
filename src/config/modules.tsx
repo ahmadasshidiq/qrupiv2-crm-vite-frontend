@@ -72,14 +72,6 @@ export const APP_MODULES: AppModule[] = [
     roles: SCHOOL_ROLES,
   },
   {
-    title: "Anggota Grup",
-    singular: "anggota grup",
-    description: "Kelola anggota pada setiap grup belajar.",
-    href: "/learning-group-members",
-    icon: UsersRound,
-    roles: SCHOOL_ROLES,
-  },
-  {
     title: "Materi Belajar",
     singular: "materi",
     description: "Kelola materi dan sumber pembelajaran.",

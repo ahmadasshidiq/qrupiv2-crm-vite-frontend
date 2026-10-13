@@ -3,10 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import type { AnnouncementAudience } from "@/lib/dto/announcement";
 import { truncateDescription } from "@/lib/helper/text";
 
-function toJakartaIso(value: unknown) {
+function toUtcIso(value: unknown) {
   if (!value) return undefined;
   const localValue = String(value);
-  return localValue.length === 16 ? `${localValue}:00+07:00` : localValue;
+  return new Date(localValue).toISOString();
 }
 
 export function getAnnouncementsPageConfig(
@@ -38,10 +38,14 @@ export function getAnnouncementsPageConfig(
       view: true,
       create: true,
       filter: false,
-      edit: false,
+      edit: true,
       delete: true,
     },
+    canEditRecord: (record) => record.status === "scheduled",
     createEndpoint: "/notifications/announcements",
+    updateEndpoint: "/notifications/announcements",
+    updateMethod: "PATCH",
+    deleteEndpoint: "/notifications/announcements",
     fields: [
       { key: "audience", title: "Tujuan penerima" },
       { key: "title", title: "Judul" },
@@ -172,9 +176,20 @@ export function getAnnouncementsPageConfig(
       title: values.title,
       message: values.message,
       repeat_type: String(values.repeat_type || "none"),
-      ...(values.send_at ? { send_at: toJakartaIso(values.send_at) } : {}),
+      ...(values.send_at ? { send_at: toUtcIso(values.send_at) } : {}),
       ...(values.repeat_until
-        ? { repeat_until: toJakartaIso(values.repeat_until) }
+        ? { repeat_until: toUtcIso(values.repeat_until) }
+        : {}),
+    }),
+    updatePayload: (values) => ({
+      audience: values.audience,
+      ...(values.target_id ? { target_id: values.target_id } : {}),
+      title: values.title,
+      message: values.message,
+      repeat_type: String(values.repeat_type || "none"),
+      ...(values.send_at ? { send_at: toUtcIso(values.send_at) } : {}),
+      ...(values.repeat_until
+        ? { repeat_until: toUtcIso(values.repeat_until) }
         : {}),
     }),
   };

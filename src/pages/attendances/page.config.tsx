@@ -251,7 +251,7 @@ export const ATTENDANCE_CREATE_CONFIG: BackendModuleConfig = {
       options: [
         { label: "Hadir", value: "on_time" },
         { label: "Terlambat", value: "late" },
-        { label: "Absent", value: "absent" },
+        { label: "Tidak hadir", value: "absent" },
       ],
       helperText: "Pilih status kehadiran guru.",
     },
@@ -293,6 +293,7 @@ export const ATTENDANCE_CREATE_CONFIG: BackendModuleConfig = {
     ).map((userId) => ({
       user_id: userId,
       check_in_at: values.check_in_at,
+      occurred_at: values.check_in_at ?? new Date().toISOString(),
       status: values.status,
       type: values.type,
       absence_reason_id: values.absence_reason_id,

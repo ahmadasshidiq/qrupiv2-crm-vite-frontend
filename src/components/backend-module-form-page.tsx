@@ -214,10 +214,11 @@ function BackendModuleFormPageContent({
                       : values;
 
                     await updateResource(
-                      behavior.endpoint,
+                      config.updateEndpoint ?? behavior.endpoint,
                       id,
                       updatePayload,
                       config.multipart ?? behavior.multipart,
+                      config.updateMethod,
                     );
                   }
 

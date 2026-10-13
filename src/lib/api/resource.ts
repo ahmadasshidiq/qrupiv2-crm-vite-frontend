@@ -51,6 +51,7 @@ export async function updateResource(
   id: string,
   values: Record<string, unknown>,
   multipart = false,
+  method: "PUT" | "PATCH" = "PUT",
 ) {
   const body = multipart
     ? Object.entries(values).reduce((form, [key, value]) => {
@@ -71,7 +72,7 @@ export async function updateResource(
       }, new FormData())
     : values;
   const response = await apiRequest(`${endpoint}/${id}`, {
-    method: "PUT",
+    method,
     body,
   });
   invalidateResourceCache(endpoint, id);

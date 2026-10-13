@@ -131,15 +131,6 @@ export const SEARCH_SUGGESTIONS: SearchSuggestion[] = [
     tone: "blue",
   },
   {
-    label: "Tambah Anggota grup",
-    description: "Tambahkan anggota ke grup belajar.",
-    category: "Tambah data",
-    href: "/learning-group-members/create",
-    keywords: ["tambah", "buat", "anggota", "grup"],
-    icon: PlusCircle,
-    tone: "violet",
-  },
-  {
     label: "Tambah Guru & Admin",
     description: "Buat akun guru, admin, atau staf baru.",
     category: "Tambah data",

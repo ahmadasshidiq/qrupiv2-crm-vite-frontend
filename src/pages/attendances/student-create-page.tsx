@@ -183,6 +183,9 @@ export default function StudentAttendanceCreatePage() {
                 state.status === "absent"
                   ? undefined
                   : new Date(checkInAt).toISOString(),
+              occurred_at: checkInAt
+                ? new Date(checkInAt).toISOString()
+                : new Date().toISOString(),
               status: state.status,
               absence_reason_id:
                 state.status === "absent" ? state.reasonId : undefined,
