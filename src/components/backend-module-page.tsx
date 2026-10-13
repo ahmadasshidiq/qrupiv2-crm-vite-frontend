@@ -215,9 +215,9 @@ function ModuleFilterPanel({
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-white/10 dark:bg-white/[0.03]">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold">Filter {title}</h3>
+        <h3 className="text-base font-semibold sm:text-sm">Filter {title}</h3>
         <Button
-          className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40"
+          className="text-sm text-red-600 hover:bg-red-50 hover:text-red-700 sm:text-xs dark:hover:bg-red-950/40"
           type="button"
           variant="ghost"
           size="sm"
@@ -226,13 +226,13 @@ function ModuleFilterPanel({
           <RotateCcw className="h-4 w-4" /> Reset Filter
         </Button>
       </div>
-      <div className="flex flex-wrap items-end gap-3 xl:grid xl:grid-cols-6 [&>div]:min-w-0 [&>div]:flex-1">
+      <div className="grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-2 xl:grid-cols-6 [&>div]:min-w-0">
         {filterFields?.map((field) =>
           field.type === "search" ? (
             <div key={field.key} className="grid gap-1.5">
-              <Label>{field.label}</Label>
+              <Label className="text-sm sm:text-xs">{field.label}</Label>
               <SearchDropdown
-                className="!h-9 w-full"
+                className="!h-9 w-full text-sm sm:text-xs"
                 items={items}
                 value={String(values[field.key] ?? "")}
                 placeholder={field.placeholder ?? `Cari ${field.label.toLowerCase()}...`}
@@ -266,14 +266,14 @@ function ModuleFilterPanel({
             </div>
           ) : field.type === "date-range" ? (
             <div key={field.key} className="grid gap-1.5">
-              <Label>{field.label}</Label>
+              <Label className="text-sm sm:text-xs">{field.label}</Label>
               <Popover>
                 <PopoverTrigger
                   render={
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-9 w-full justify-start text-left font-normal"
+                      className="h-9 w-full justify-start text-left text-sm font-normal sm:text-xs"
                     />
                   }
                 >
@@ -312,9 +312,9 @@ function ModuleFilterPanel({
             </div>
           ) : field.type === "text" ? (
             <div key={field.key} className="grid gap-1.5">
-              <Label>{field.label}</Label>
+              <Label className="text-sm sm:text-xs">{field.label}</Label>
               <Input
-                className="!h-9 w-full"
+                className="!h-9 w-full text-sm sm:text-xs"
                 value={String(values[field.key] ?? "")}
                 placeholder={
                   field.placeholder ?? `Cari ${field.label.toLowerCase()}...`
@@ -324,12 +324,12 @@ function ModuleFilterPanel({
             </div>
           ) : field.type === "region" ? (
             <div key={field.key} className="grid gap-1.5">
-              <Label>{field.label}</Label>
+              <Label className="text-sm sm:text-xs">{field.label}</Label>
               <RegionSelect
                 name={field.key}
                 level={field.regionLevel!}
                 value=""
-                className="!h-9 w-full"
+                className="!h-9 w-full text-sm sm:text-xs"
                 disabled={Boolean(
                   field.regionParentCodeKey &&
                     !values[field.regionParentCodeKey],
@@ -350,7 +350,7 @@ function ModuleFilterPanel({
             </div>
           ) : (
             <div key={field.key} className="grid gap-1.5">
-              <Label>{field.label}</Label>
+              <Label className="text-sm sm:text-xs">{field.label}</Label>
               <Select
                 value={
                   field.options?.find(
@@ -365,7 +365,7 @@ function ModuleFilterPanel({
                   )
                 }
               >
-                <SelectTrigger className="!h-9 w-full">
+                <SelectTrigger className="!h-9 w-full text-sm sm:text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -384,9 +384,9 @@ function ModuleFilterPanel({
         )}
         {!filterFields ? (
           <div className="grid gap-1.5">
-            <Label htmlFor="filter-search">Cari</Label>
+            <Label className="text-sm sm:text-xs" htmlFor="filter-search">Cari</Label>
             <SearchDropdown
-              className="!h-9 w-60"
+              className="!h-9 w-full text-sm sm:text-xs"
               items={items}
               value={String(values.search ?? "")}
               placeholder={`Cari ${title.toLowerCase()}...`}
@@ -402,7 +402,7 @@ function ModuleFilterPanel({
         ) : null}
         {!filterFields && showStatus ? (
           <div className="grid gap-1.5">
-            <Label>Status</Label>
+            <Label className="text-sm sm:text-xs">Status</Label>
             <Select
               value={
                 values.status === "active"
@@ -422,7 +422,7 @@ function ModuleFilterPanel({
                 )
               }
             >
-              <SelectTrigger className="!h-9 w-full">
+              <SelectTrigger className="!h-9 w-full text-sm sm:text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -434,7 +434,7 @@ function ModuleFilterPanel({
           </div>
         ) : null}
         <Button
-          className="p-4 bg-blue-600 text-white hover:bg-blue-700 xl:col-start-6 xl:justify-self-end"
+          className="w-full min-w-0 p-4 text-sm bg-blue-600 text-white hover:bg-blue-700 xl:col-start-6"
           type="button"
           onClick={onApply}
         >
