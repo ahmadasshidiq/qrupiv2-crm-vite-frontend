@@ -18,6 +18,75 @@ export default function UsersPage() {
   const config = useMemo(
     () => ({
       ...USERS_PAGE_CONFIG,
+      filterFields:
+        category === "student"
+          ? [
+              {
+                key: "u.name.ilike",
+                label: "Nama",
+                type: "search" as const,
+                placeholder: "Cari siswa...",
+              },
+              {
+                key: "context_code",
+                label: "Kode konteks",
+                type: "text" as const,
+                placeholder: "Cari kode konteks",
+              },
+              {
+                key: "barcode",
+                label: "Barcode",
+                type: "text" as const,
+                placeholder: "Cari barcode",
+              },
+              {
+                key: "u.status",
+                label: "Status",
+                type: "select" as const,
+                options: [
+                  { label: "Aktif", value: "active" },
+                  { label: "Tidak Aktif", value: "inactive" },
+                ],
+              },
+            ]
+          : [
+              {
+                key: "u.name.ilike",
+                label: "Nama",
+                type: "search" as const,
+                placeholder: "Cari guru & admin...",
+              },
+              {
+                key: "context_code",
+                label: "No Identitas",
+                type: "text" as const,
+                placeholder: "Cari no identitas",
+              },
+              {
+                key: "email",
+                label: "Email",
+                type: "text" as const,
+                placeholder: "Cari email",
+              },
+              {
+                key: "type",
+                label: "Tipe",
+                type: "select" as const,
+                options: [
+                  { label: "Guru", value: "teacher" },
+                  { label: "Admin", value: "admin" },
+                ],
+              },
+              {
+                key: "u.status",
+                label: "Status",
+                type: "select" as const,
+                options: [
+                  { label: "Aktif", value: "active" },
+                  { label: "Tidak Aktif", value: "inactive" },
+                ],
+              },
+            ],
       fields: USERS_PAGE_CONFIG.fields.filter((field) => {
         if (category === "student" && field.key === "email") return false;
         if (category !== "student" && field.key === "barcode") return false;

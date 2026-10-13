@@ -4,6 +4,14 @@ export const ABSENCE_REASONS_PAGE_CONFIG: BackendModuleConfig = {
   title: "Alasan ketidakhadiran",
   description: "Kelola pilihan alasan izin dan ketidakhadiran.",
   emptyMessage: "Belum ada alasan ketidakhadiran",
+  filterFields: [
+    {
+      key: "name.ilike",
+      label: "Nama alasan",
+      type: "text",
+      placeholder: "Cari alasan ketidakhadiran",
+    },
+  ],
   backHref: "/attendances?category=student",
   backLabel: "Kembali",
   actions: {

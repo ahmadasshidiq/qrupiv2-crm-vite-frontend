@@ -9,7 +9,7 @@ export const ROLES_PAGE_CONFIG: BackendModuleConfig = {
     edit: true,
     archive: true,
     delete: true,
-    filter: true,
+    filter: false,
     import: true,
     export: true,
   },

@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_DEBOUNCE_MS = 700;
 
 type SearchDropdownProps<T> = {
   items: T[];
@@ -10,8 +10,11 @@ type SearchDropdownProps<T> = {
   placeholder: string;
   className?: string;
   getLabel: (item: T) => string;
+  getValue?: (item: T) => string;
   onChange: (value: string) => void;
+  onSelect?: (value: string, label: string) => void;
   fetchMatches: (query: string) => Promise<T[]>;
+  fetchOnOpen?: boolean;
 };
 
 export function SearchDropdown<T>({
@@ -20,11 +23,21 @@ export function SearchDropdown<T>({
   placeholder,
   className,
   getLabel,
+  getValue,
   onChange,
+  onSelect,
   fetchMatches,
+  fetchOnOpen = false,
 }: SearchDropdownProps<T>) {
   const [open, setOpen] = useState(false);
   const [remoteItems, setRemoteItems] = useState<T[]>([]);
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+  const fetchMatchesRef = useRef(fetchMatches);
+  fetchMatchesRef.current = fetchMatches;
+
+  useEffect(() => {
+    if (!value) setSelectedLabel(null);
+  }, [value]);
   const localItems = useMemo(
     () =>
       items
@@ -36,10 +49,10 @@ export function SearchDropdown<T>({
   );
 
   useEffect(() => {
-    if (!open || !value || localItems.length) return;
+    if (!open || (!value && !fetchOnOpen) || (localItems.length && !fetchOnOpen)) return;
     let active = true;
     const timer = window.setTimeout(() => {
-      void fetchMatches(value)
+      void fetchMatchesRef.current(value)
         .then((data) => {
           if (active) setRemoteItems(data.slice(0, 5));
         })
@@ -49,23 +62,26 @@ export function SearchDropdown<T>({
       active = false;
       window.clearTimeout(timer);
     };
-  }, [fetchMatches, localItems.length, open, value]);
+  }, [fetchOnOpen, localItems.length, open, value]);
 
   const suggestions =
     value && localItems.length === 0
       ? remoteItems
       : value
         ? localItems
-        : items.slice(0, 5);
+        : fetchOnOpen
+          ? remoteItems
+          : items.slice(0, 5);
   return (
     <div className="relative">
       <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-zinc-400" />
       <Input
-        value={value}
+        value={selectedLabel ?? value}
         placeholder={placeholder}
         className={`pl-9 ${className}`}
         onFocus={() => setOpen(true)}
         onChange={(event) => {
+          setSelectedLabel(null);
           onChange(event.target.value);
           setOpen(true);
         }}
@@ -79,7 +95,13 @@ export function SearchDropdown<T>({
                 key={`${getLabel(item)}-${index}`}
                 type="button"
                 className="flex w-full rounded-md px-2 py-2 text-left text-xs hover:bg-zinc-100 dark:hover:bg-white/10"
-                onMouseDown={() => onChange(getLabel(item))}
+              onMouseDown={() => {
+                const label = getLabel(item);
+                const selectedValue = getValue ? getValue(item) : label;
+                setSelectedLabel(label);
+                onSelect?.(selectedValue, label);
+                if (!onSelect) onChange(selectedValue);
+              }}
               >
                 {getLabel(item)}
               </button>

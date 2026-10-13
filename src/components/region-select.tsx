@@ -14,9 +14,11 @@ type RegionSelectProps = {
   level: RegionLevel;
   value: string;
   placeholder: string;
+  className?: string;
   disabled?: boolean;
   filters?: PaginationFilters;
   onValueChange: (code: string) => void;
+  onLabelChange?: (label: string) => void;
 };
 
 function getRegionLabel(region: ApiRecordDto) {
@@ -28,9 +30,11 @@ export function RegionSelect({
   level,
   value,
   placeholder,
+  className,
   disabled = false,
   filters = {},
   onValueChange,
+  onLabelChange,
 }: RegionSelectProps) {
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<ApiRecordDto[]>([]);
@@ -52,15 +56,15 @@ export function RegionSelect({
   }, [level, value]);
 
   useEffect(() => {
-    if (disabled) return;
+    if (disabled || !open) return;
 
     const timer = window.setTimeout(() => {
       void fetchRegions(level, { ...filters, ...(query ? { search: query } : {}) })
         .then((result) => setItems(result.items))
         .catch(() => setItems([]));
-    }, query ? 300 : 0);
+    }, query ? 700 : 0);
     return () => window.clearTimeout(timer);
-  }, [disabled, filterKey, filters, level, query]);
+  }, [disabled, filterKey, level, open, query]);
 
   return (
     <div className="relative">
@@ -70,7 +74,7 @@ export function RegionSelect({
         value={query}
         disabled={disabled}
         placeholder={placeholder}
-        className="h-10 bg-white pl-9 text-sm dark:bg-white/[0.03]"
+        className={`h-10 bg-white pl-9 text-sm dark:bg-white/[0.03] ${className ?? ""}`}
         onFocus={() => setOpen(true)}
         onBlur={() => window.setTimeout(() => setOpen(false), 150)}
         onChange={(event) => {
@@ -88,9 +92,10 @@ export function RegionSelect({
                 type="button"
                 className="flex w-full rounded-md px-2 py-2 text-left text-xs hover:bg-zinc-100 dark:hover:bg-white/10"
                 onMouseDown={() => {
-                  setQuery(getRegionLabel(item));
-                  onValueChange(String(item.code ?? ""));
-                  setOpen(false);
+          setQuery(getRegionLabel(item));
+          onValueChange(String(item.code ?? ""));
+          onLabelChange?.(getRegionLabel(item));
+          setOpen(false);
                 }}
               >
                 {getRegionLabel(item)}

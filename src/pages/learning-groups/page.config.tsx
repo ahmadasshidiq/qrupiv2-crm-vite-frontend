@@ -6,6 +6,48 @@ export const LEARNING_GROUPS_PAGE_CONFIG: BackendModuleConfig = {
   description:
     "Kelola kelas, mata pelajaran, mata kuliah, dan komunitas belajar.",
   emptyMessage: "Belum ada grup pembelajaran",
+  filterFields: [
+    {
+      key: "name.ilike",
+      label: "Nama grup",
+      type: "search",
+      placeholder: "Cari nama grup...",
+    },
+    {
+      key: "code",
+      label: "Kode",
+      type: "text",
+      placeholder: "Cari kode grup",
+    },
+    {
+      key: "level",
+      label: "Tingkat",
+      type: "text",
+      placeholder: "Cari tingkat",
+    },
+    {
+      key: "department.ilike",
+      label: "Program/mapel",
+      type: "text",
+      placeholder: "Cari program/mapel",
+    },
+    {
+      key: "major.ilike",
+      label: "Peminatan",
+      type: "text",
+      placeholder: "Cari peminatan",
+    },
+    {
+      key: "lg.type",
+      label: "Tipe",
+      type: "select",
+      options: [
+        { label: "Kelas sekolah", value: "school-class" },
+        { label: "Kelas kuliah", value: "university-class" },
+        { label: "Klub / komunitas", value: "club" },
+      ],
+    },
+  ],
   editableFields: [
     { key: "institution_id", label: "ID institusi", type: "hidden" },
     {
@@ -85,6 +127,7 @@ export const LEARNING_GROUPS_PAGE_CONFIG: BackendModuleConfig = {
     { key: "code", title: "Kode" },
     { key: "level", title: "Tingkat" },
     { key: "department", title: "Program/mapel" },
+    { key: "major", title: "Peminatan" },
     { key: "academic_year", title: "Tahun ajaran" },
     {
       key: "status",

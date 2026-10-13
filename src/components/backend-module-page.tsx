@@ -5,8 +5,10 @@ import DynamicPage, {
   type DefaultColumnFormat,
 } from "@/components/dynamic-page";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchDropdown } from "@/components/search-dropdown";
+import { RegionSelect } from "@/components/region-select";
 import {
   Select,
   SelectContent,
@@ -16,7 +18,11 @@ import {
 } from "@/components/ui/select";
 import { ApiError } from "@/lib/api/client";
 import type { ApiRecordDto } from "@/lib/dto/api";
-import type { PaginatedResult, PaginationFilters } from "@/lib/api/paginated";
+import {
+  fetchPaginated,
+  type PaginatedResult,
+  type PaginationFilters,
+} from "@/lib/api/paginated";
 import {
   Archive,
   ArrowLeft,
@@ -102,7 +108,18 @@ export type ModuleAction =
 export type FilterField = {
   key: string;
   label: string;
-  type: "text" | "select";
+  type: "text" | "search" | "select" | "region" | "date-range";
+  fromKey?: string;
+  toKey?: string;
+  regionLevel?: import("@/lib/api/regions").RegionLevel;
+  regionCodeKey?: string;
+  regionParentCodeKey?: string;
+  regionParentParam?: string;
+  suggestionEndpoint?: string;
+  suggestionFilters?: PaginationFilters;
+  suggestionSearchKey?: string;
+  suggestionFetchOnOpen?: boolean;
+  suggestionValueKey?: string;
   placeholder?: string;
   options?: Array<{ label: string; value: string }>;
 };
@@ -209,25 +226,126 @@ function ModuleFilterPanel({
           <RotateCcw className="h-4 w-4" /> Reset Filter
         </Button>
       </div>
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-end gap-3 xl:grid xl:grid-cols-6 [&>div]:min-w-0 [&>div]:flex-1">
         {filterFields?.map((field) =>
-          field.type === "text" ? (
+          field.type === "search" ? (
             <div key={field.key} className="grid gap-1.5">
               <Label>{field.label}</Label>
               <SearchDropdown
-                className="!h-8 w-auto"
+                className="!h-9 w-full"
                 items={items}
+                value={String(values[field.key] ?? "")}
+                placeholder={field.placeholder ?? `Cari ${field.label.toLowerCase()}...`}
+                getLabel={(item) => String(item.name ?? item.title ?? item.code ?? item.id ?? "Data")}
+                getValue={
+                  field.suggestionValueKey
+                    ? (item) => String(item[field.suggestionValueKey!] ?? "")
+                    : undefined
+                }
+                onSelect={
+                  field.suggestionValueKey
+                    ? (selectedValue) => onChange(field.key, selectedValue)
+                    : undefined
+                }
+                onChange={(value) => onChange(field.key, value)}
+                fetchMatches={(query) =>
+                  field.suggestionEndpoint
+                    ? fetchPaginated<ApiRecordDto>(
+                        field.suggestionEndpoint,
+                        1,
+                        5,
+                        {
+                          ...field.suggestionFilters,
+                          [field.suggestionSearchKey ?? "search"]: query,
+                        },
+                      ).then((result) => result.items)
+                    : fetchSuggestions(query)
+                }
+                fetchOnOpen={field.suggestionFetchOnOpen}
+              />
+            </div>
+          ) : field.type === "date-range" ? (
+            <div key={field.key} className="grid gap-1.5">
+              <Label>{field.label}</Label>
+              <Popover>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-9 w-full justify-start text-left font-normal"
+                    />
+                  }
+                >
+                  <CalendarDays className="mr-2 size-4" />
+                  {values[field.fromKey ?? ""] && values[field.toKey ?? ""]
+                    ? `${format(new Date(String(values[field.fromKey!])), "dd/MM/yyyy")} - ${format(new Date(String(values[field.toKey!])), "dd/MM/yyyy")}`
+                    : "Pilih rentang tanggal"}
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="range"
+                    selected={
+                      values[field.fromKey ?? ""]
+                        ? {
+                            from: new Date(String(values[field.fromKey!])),
+                            to: values[field.toKey ?? ""]
+                              ? new Date(String(values[field.toKey!] ))
+                              : undefined,
+                          }
+                        : undefined
+                    }
+                    onSelect={(range) => {
+                      onChange(
+                        field.fromKey ?? `${field.key}.gte`,
+                        range?.from ? format(range.from, "yyyy-MM-dd") : "",
+                      );
+                      onChange(
+                        field.toKey ?? `${field.key}.lte`,
+                        range?.to ? format(range.to, "yyyy-MM-dd") : "",
+                      );
+                    }}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          ) : field.type === "text" ? (
+            <div key={field.key} className="grid gap-1.5">
+              <Label>{field.label}</Label>
+              <Input
+                className="!h-9 w-full"
                 value={String(values[field.key] ?? "")}
                 placeholder={
                   field.placeholder ?? `Cari ${field.label.toLowerCase()}...`
                 }
-                getLabel={(item) =>
-                  String(
-                    item.name ?? item.title ?? item.code ?? item.id ?? "Data",
-                  )
+                onChange={(event) => onChange(field.key, event.target.value)}
+              />
+            </div>
+          ) : field.type === "region" ? (
+            <div key={field.key} className="grid gap-1.5">
+              <Label>{field.label}</Label>
+              <RegionSelect
+                name={field.key}
+                level={field.regionLevel!}
+                value=""
+                className="!h-9 w-full"
+                disabled={Boolean(
+                  field.regionParentCodeKey &&
+                    !values[field.regionParentCodeKey],
+                )}
+                filters={
+                  field.regionParentCodeKey && field.regionParentParam
+                    ? {
+                        [field.regionParentParam]: values[field.regionParentCodeKey],
+                      }
+                    : {}
                 }
-                onChange={(value) => onChange(field.key, value)}
-                fetchMatches={fetchSuggestions}
+                placeholder={field.placeholder ?? `Cari ${field.label.toLowerCase()}...`}
+                onValueChange={(value) =>
+                  onChange(field.regionCodeKey ?? `${field.key}.__code`, value)
+                }
+                onLabelChange={(label) => onChange(field.key, label)}
               />
             </div>
           ) : (
@@ -247,7 +365,7 @@ function ModuleFilterPanel({
                   )
                 }
               >
-                <SelectTrigger className="!h-8 w-44">
+                <SelectTrigger className="!h-9 w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -268,7 +386,7 @@ function ModuleFilterPanel({
           <div className="grid gap-1.5">
             <Label htmlFor="filter-search">Cari</Label>
             <SearchDropdown
-              className="!h-8 w-60"
+              className="!h-9 w-60"
               items={items}
               value={String(values.search ?? "")}
               placeholder={`Cari ${title.toLowerCase()}...`}
@@ -304,7 +422,7 @@ function ModuleFilterPanel({
                 )
               }
             >
-              <SelectTrigger className="!h-8 w-44">
+              <SelectTrigger className="!h-9 w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -316,7 +434,7 @@ function ModuleFilterPanel({
           </div>
         ) : null}
         <Button
-          className="p-4 bg-blue-600 text-white hover:bg-blue-700"
+          className="p-4 bg-blue-600 text-white hover:bg-blue-700 xl:col-start-6 xl:justify-self-end"
           type="button"
           onClick={onApply}
         >
@@ -615,9 +733,19 @@ function DefaultModulePageContent({
                 setAppliedFilters({});
               }}
               items={items}
-              fetchSuggestions={async (query) =>
-                (await fetchPage(1, 5, { search: query })).items
-              }
+              fetchSuggestions={async (query) => {
+                const normalizedQuery = query.toLowerCase();
+
+                return items
+                  .filter((item) =>
+                    String(
+                      item.name ?? item.title ?? item.code ?? item.id ?? "",
+                    )
+                      .toLowerCase()
+                      .includes(normalizedQuery),
+                  )
+                  .slice(0, 5);
+              }}
             />
           ) : null
         }

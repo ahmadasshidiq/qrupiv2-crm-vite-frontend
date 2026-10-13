@@ -29,6 +29,99 @@ function AdminAttendancesPage() {
   const config = useMemo(
     () => ({
       ...ATTENDANCES_PAGE_CONFIG,
+      filterFields:
+        category === "student"
+          ? [
+              {
+                key: "u.name.ilike",
+                label: "Nama",
+                type: "search" as const,
+                suggestionEndpoint: "/users",
+                suggestionFilters: { "u.type.in": "student" },
+                suggestionSearchKey: "u.name.ilike",
+                suggestionFetchOnOpen: true,
+                placeholder: "Cari nama siswa",
+              },
+              {
+                key: "u.context_code",
+                label: "Kode konteks",
+                type: "text" as const,
+                placeholder: "Cari kode konteks",
+              },
+              {
+                key: "al.learning_group_id",
+                label: "Grup belajar",
+                type: "search" as const,
+                suggestionEndpoint: "/learning-groups",
+                suggestionSearchKey: "lg.name.ilike",
+                suggestionFetchOnOpen: true,
+                suggestionValueKey: "id",
+                placeholder: "Cari grup belajar",
+              },
+              {
+                key: "al.occurred_at",
+                label: "Rentang tanggal",
+                type: "date-range" as const,
+                fromKey: "al.occurred_at.gte",
+                toKey: "al.occurred_at.lte",
+              },
+              {
+                key: "al.recorded_user_id",
+                label: "Dicatat oleh",
+                type: "search" as const,
+                suggestionEndpoint: "/users",
+                suggestionFilters: { "u.type.in": "admin,teacher,staff" },
+                suggestionSearchKey: "u.name.ilike",
+                suggestionFetchOnOpen: true,
+                suggestionValueKey: "id",
+                placeholder: "Cari pencatat",
+              },
+              {
+                key: "al.status",
+                label: "Status",
+                type: "select" as const,
+                options: [
+                  { label: "Hadir", value: "on_time" },
+                  { label: "Terlambat", value: "late" },
+                  { label: "Tidak hadir", value: "absent" },
+                ],
+              },
+            ]
+          : [
+              {
+                key: "u.name.ilike",
+                label: "Nama",
+                type: "search" as const,
+                suggestionEndpoint: "/users",
+                suggestionFilters: { "u.type.in": "teacher" },
+                suggestionSearchKey: "u.name.ilike",
+                suggestionFetchOnOpen: true,
+                placeholder: "Cari nama guru",
+              },
+              {
+                key: "u.context_code",
+                label: "No Identitas",
+                type: "text" as const,
+                placeholder: "Cari no identitas",
+              },
+              {
+                key: "al.status",
+                label: "Status",
+                type: "select" as const,
+                options: [
+                  { label: "Hadir", value: "on_time" },
+                  { label: "Terlambat", value: "late" },
+                  { label: "Tidak hadir", value: "absent" },
+                ],
+              },
+              {
+                key: "al.created_at",
+                label: "Rentang tanggal",
+                type: "date-range" as const,
+                fromKey: "al.created_at.gte",
+                toKey: "al.created_at.lte",
+              },
+            ],
       fields: ATTENDANCES_PAGE_CONFIG.fields.filter((field) =>
         category === "student"
           ? field.key !== "user_email"

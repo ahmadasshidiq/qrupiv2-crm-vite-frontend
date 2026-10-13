@@ -5,6 +5,44 @@ export const ACTIVITY_ITEMS_PAGE_CONFIG: BackendModuleConfig = {
   description: "Atur jenis aktivitas, poin, dan batas periode.",
   emptyMessage: "Belum ada jenis aktivitas",
   display: "cards",
+  filterFields: [
+    {
+      key: "ai.category_id",
+      label: "Kategori",
+      type: "search",
+      suggestionEndpoint: "/activity-categories",
+      suggestionSearchKey: "ac.name.ilike",
+      suggestionFetchOnOpen: true,
+      suggestionValueKey: "id",
+      placeholder: "Cari kategori",
+    },
+    {
+      key: "ai.name.ilike",
+      label: "Nama aktivitas",
+      type: "text",
+      placeholder: "Cari nama aktivitas",
+    },
+    {
+      key: "ai.is_send_notif",
+      label: "Notifikasi",
+      type: "select",
+      options: [
+        { label: "Kirim notifikasi", value: "true" },
+        { label: "Jangan kirim notifikasi", value: "false" },
+      ],
+    },
+    {
+      key: "ai.period_type",
+      label: "Periode",
+      type: "select",
+      options: [
+        { label: "Tidak ada batas tambahan", value: "none" },
+        { label: "Harian", value: "daily" },
+        { label: "Mingguan", value: "weekly" },
+        { label: "Bulanan", value: "monthly" },
+      ],
+    },
+  ],
   editableFields: [
     {
       key: "name",

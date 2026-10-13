@@ -64,6 +64,44 @@ export const LEARNING_RESOURCES_PAGE_CONFIG: BackendModuleConfig = {
   title: "Materi Belajar",
   description: "Kelola materi dan sumber pembelajaran.",
   emptyMessage: "Belum ada materi belajar",
+  filterFields: [
+    {
+      key: "lrg.learning_group_id",
+      label: "Grup belajar",
+      type: "search",
+      suggestionEndpoint: "/learning-groups",
+      suggestionSearchKey: "lg.name.ilike",
+      suggestionFetchOnOpen: true,
+      suggestionValueKey: "id",
+      placeholder: "Cari grup belajar",
+    },
+    {
+      key: "title.ilike",
+      label: "Judul materi",
+      type: "text",
+      placeholder: "Cari judul materi",
+    },
+    {
+      key: "lr.type",
+      label: "Tipe",
+      type: "select",
+      options: [
+        { label: "Media interaktif", value: "interactive-media" },
+        { label: "Media", value: "media" },
+      ],
+    },
+    {
+      key: "lr.uploaded_user_id",
+      label: "Pengunggah",
+      type: "search",
+      suggestionEndpoint: "/users",
+      suggestionFilters: { "u.type.in": "admin,teacher,staff" },
+      suggestionSearchKey: "u.name.ilike",
+      suggestionFetchOnOpen: true,
+      suggestionValueKey: "id",
+      placeholder: "Cari nama pengunggah",
+    },
+  ],
   multipart: true,
   createPayload: (values) => {
     const contentId = String(values.h5p_content_id ?? "");

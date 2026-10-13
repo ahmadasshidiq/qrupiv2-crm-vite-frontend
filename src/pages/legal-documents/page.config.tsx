@@ -12,7 +12,7 @@ export const LEGAL_DOCUMENTS_PAGE_CONFIG: BackendModuleConfig = {
     create: true,
     edit: true,
     delete: true,
-    filter: true,
+    filter: false,
     export: true,
   },
   fields: [
