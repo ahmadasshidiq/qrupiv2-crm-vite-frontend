@@ -44,6 +44,20 @@ import { H5PEditor, type H5PEditorHandle } from "@/components/h5p-editor";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { PermissionSelector, type Permission } from "@/components/permission-selector";
 
+function getFormSaveErrorMessage(error: unknown) {
+  if (!(error instanceof ApiError)) return "Data gagal disimpan.";
+
+  if (
+    error.message.includes(
+      "period_type is required when period_limit is greater than 0",
+    )
+  ) {
+    return "Rentang batas tambahan belum dipilih. Pilih rentangnya, atau isi 0 pada maksimum pencatatan jika tidak ingin memakai batas tambahan.";
+  }
+
+  return error.message;
+}
+
 type ModuleFormPageProps = {
   config: BackendModuleConfig;
   mode: "create" | "edit" | "view";
@@ -230,12 +244,7 @@ function BackendModuleFormPageContent({
 
                   navigate(-1);
                 } catch (error) {
-                  const message =
-                    error instanceof ApiError
-                      ? error.message
-                      : "Data gagal disimpan.";
-
-                  toast.error(message);
+                  toast.error(getFormSaveErrorMessage(error));
                 } finally {
                   setSaving(false);
                 }

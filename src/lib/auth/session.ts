@@ -75,3 +75,12 @@ export function hasPermission(model: string, action: string) {
 export function canReadModel(model: string) {
   return hasPermission(model, "get") || hasPermission(model, "get-all");
 }
+
+export function canAccessMenu(model: string) {
+  return (
+    hasPermission(model, "get-all") &&
+    ["create", "update", "delete", "archive"].some((action) =>
+      hasPermission(model, action),
+    )
+  );
+}

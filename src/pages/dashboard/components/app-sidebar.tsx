@@ -28,7 +28,7 @@ import {
 } from "../page.config";
 import type { NavigationItem } from "../types";
 import {
-  canReadModel,
+  canAccessMenu,
   getAuthUser,
   getRoleName,
   clearSession,
@@ -152,13 +152,13 @@ function NavigationGroup({
       ...item,
       children: item.children?.filter(
         (child) =>
-          child.href.endsWith("/me") || canReadModel(modelFromHref(child.href)),
+        child.href.endsWith("/me") || canAccessMenu(modelFromHref(child.href)),
       ),
     }))
     .filter(
       (item) =>
         modelFromHref(item.href) === "dashboard" ||
-        canReadModel(modelFromHref(item.href)) ||
+        canAccessMenu(modelFromHref(item.href)) ||
         Boolean(item.children?.length),
     );
 
