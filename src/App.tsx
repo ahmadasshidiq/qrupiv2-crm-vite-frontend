@@ -20,6 +20,7 @@ import StudentAttendanceCreatePage from "@/pages/attendances/student-create-page
 import AbsenceReasonsPage from "@/pages/absence-reasons/page";
 import ActivitiesPage from "@/pages/activities/page";
 import ActivityChartPage from "@/pages/activities/chart-page";
+import KaihPage from "@/pages/activities/kaih-page";
 import QuizRankingPage from "@/pages/quiz-sessions/ranking-page";
 import ActivityCategoriesPage from "@/pages/activity-categories/page";
 import ActivityItemsPage from "@/pages/activity-items/page";
@@ -114,6 +115,7 @@ function App() {
           <Route path="/absence-reasons" element={<PermissionRoute model="attendance-absence-reasons"><AbsenceReasonsPage /></PermissionRoute>} />
           {moduleFormRoutes("/absence-reasons", ABSENCE_REASONS_PAGE_CONFIG)}
           <Route path="/activities/chart" element={<PermissionRoute model="activities"><ActivityChartPage /></PermissionRoute>} />
+          <Route path="/activities/kaih" element={<PermissionRoute model="activities"><KaihPage /></PermissionRoute>} />
           <Route path="/activities" element={<PermissionRoute model="activities"><ActivitiesPage /></PermissionRoute>} />
           {moduleFormRoutes("/activities", ACTIVITIES_PAGE_CONFIG)}
           <Route

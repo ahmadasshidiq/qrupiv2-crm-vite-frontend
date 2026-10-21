@@ -127,7 +127,7 @@ export const USERS_PAGE_CONFIG: BackendModuleConfig = {
     { key: "context_code", title: "No. identitas" },
     { key: "name", title: "Nama" },
     { key: "email", title: "Email" },
-    { key: "barcode", title: "Barcode" },
+    { key: "barcode", title: "QR" },
     { key: "institution_name", title: "Institusi" },
     {
       key: "type",

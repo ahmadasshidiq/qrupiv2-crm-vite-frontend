@@ -35,9 +35,19 @@ export default function UsersPage() {
               },
               {
                 key: "barcode",
-                label: "Barcode",
+                label: "QR",
                 type: "text" as const,
-                placeholder: "Cari barcode",
+                placeholder: "Cari QR",
+              },
+              {
+                key: "learning_group_id",
+                label: "Grup belajar",
+                type: "search" as const,
+                suggestionEndpoint: "/learning-groups",
+                suggestionSearchKey: "lg.name.ilike",
+                suggestionFetchOnOpen: true,
+                suggestionValueKey: "id",
+                placeholder: "Cari grup belajar",
               },
               {
                 key: "u.status",
@@ -101,6 +111,7 @@ export default function UsersPage() {
         category === "student"
           ? "Belum ada siswa"
           : "Belum ada guru atau admin",
+      filterAction: category === "student" ? { label: "Generate QR" } : undefined,
     }),
     [category, isSuperAdmin],
   );
@@ -126,7 +137,7 @@ export default function UsersPage() {
             { key: "context_type", label: "Tipe Identitas" },
             { key: "context_code", label: "No Identitas" },
             { key: "status", label: "Status" },
-            { key: "barcode", label: "Barcode" },
+            { key: "barcode", label: "QR" },
             { key: "created_at", label: "Tanggal Dibuat" },
           ]
         : [
@@ -177,6 +188,29 @@ export default function UsersPage() {
     }
   }, [category]);
 
+  const generateQr = useCallback(async (filters?: PaginationFilters) => {
+    try {
+      const params = new URLSearchParams();
+      const learningGroupId = filters?.learning_group_id;
+      if (learningGroupId) params.set("learning_group_id", String(learningGroupId));
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api/v1"}/export/qrs/pdf${params.toString() ? `?${params.toString()}` : ""}`,
+        { credentials: "include" },
+      );
+      if (!response.ok) throw new Error("Generate QR gagal.");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "qr-siswa.pdf";
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success("QR siswa berhasil dibuat.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Generate QR gagal.");
+    }
+  }, []);
+
   return (
     <>
       <DefaultModulePage
@@ -184,6 +218,7 @@ export default function UsersPage() {
         fetchPage={fetchPage}
         onExport={(dateRange) => void exportUsers(dateRange)}
         onImport={() => setImportOpen(true)}
+        onFilterAction={category === "student" ? (filters) => void generateQr(filters) : undefined}
       />
       <ImportDialog
         open={importOpen}

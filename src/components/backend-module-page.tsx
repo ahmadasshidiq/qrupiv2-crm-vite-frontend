@@ -75,6 +75,7 @@ export type BackendModuleConfig = {
     icon?: LucideIcon;
     className?: string;
   }>;
+  filterAction?: { label: string };
   allowToolbarActionsWithoutCreate?: boolean;
   headerAction?: {
     label: string;
@@ -180,7 +181,8 @@ type DefaultModulePageProps = {
     label: string;
     href: string;
     icon?: LucideIcon;
-  }) => boolean;
+  }, filters?: PaginationFilters) => boolean;
+  onFilterAction?: (filters: PaginationFilters) => void;
   onHeaderAction?: () => void;
   onExport?: (range?: { from: string; to: string }) => void;
   onImport?: () => void;
@@ -202,6 +204,8 @@ function ModuleFilterPanel({
   filterFields,
   onChange,
   onApply,
+  onFilterAction,
+  filterAction,
   onClear,
   items,
   fetchSuggestions,
@@ -212,6 +216,8 @@ function ModuleFilterPanel({
   filterFields?: FilterField[];
   onChange: (key: string, value: string) => void;
   onApply: () => void;
+  onFilterAction?: () => void;
+  filterAction?: { label: string };
   onClear: () => void;
   items: ApiRecordDto[];
   fetchSuggestions: (query: string) => Promise<ApiRecordDto[]>;
@@ -437,13 +443,16 @@ function ModuleFilterPanel({
             </Select>
           </div>
         ) : null}
-        <Button
-          className="w-full min-w-0 p-4 text-sm bg-blue-600 text-white hover:bg-blue-700 xl:col-start-6"
-          type="button"
-          onClick={onApply}
-        >
-          Terapkan Filter
-        </Button>
+        <div className="mt-4 flex justify-end gap-2 xl:col-span-6">
+          <Button
+            className="p-4 bg-blue-600 text-white hover:bg-blue-700"
+            type="button"
+            onClick={onApply}
+          >
+            Terapkan Filter
+          </Button>
+          {onFilterAction && filterAction ? <Button type="button" className="gap-2 bg-violet-600 p-4 text-white hover:bg-violet-700" onClick={onFilterAction}><Download className="size-4" />{filterAction.label}</Button> : null}
+        </div>
       </div>
     </div>
   );
@@ -453,6 +462,7 @@ function DefaultModulePageContent({
   config,
   fetchPage,
   onToolbarAction,
+  onFilterAction,
   onHeaderAction,
   onExport,
   onImport,
@@ -662,7 +672,7 @@ function DefaultModulePageContent({
                     key={action.href}
                     variant="outline"
                     onClick={() => {
-                      if (!onToolbarAction?.(action)) navigate(action.href);
+                      if (!onToolbarAction?.(action, appliedFilters)) navigate(action.href);
                     }}
                   >
                     {action.icon ? <action.icon className="size-4" /> : null}
@@ -731,6 +741,8 @@ function DefaultModulePageContent({
                 setCurrentPage(1);
                 setAppliedFilters(draftFilters);
               }}
+              onFilterAction={() => onFilterAction?.(draftFilters)}
+              filterAction={config.filterAction}
               onClear={() => {
                 setDraftFilters({});
                 setCurrentPage(1);

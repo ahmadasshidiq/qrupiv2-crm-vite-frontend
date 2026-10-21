@@ -1,7 +1,7 @@
 import type { BackendModuleConfig } from "@/components/backend-module-page";
 import { Badge } from "@/components/ui/badge";
 import { truncateDescription } from "@/lib/helper/text";
-import { ChartSpline } from "lucide-react";
+import { ChartSpline, FileBarChart } from "lucide-react";
 export const ACTIVITIES_PAGE_CONFIG: BackendModuleConfig = {
   title: "Aktivitas",
   description: "Pantau aktivitas positif dan pelanggaran siswa.",
@@ -145,6 +145,9 @@ export const ACTIVITIES_PAGE_CONFIG: BackendModuleConfig = {
     icon: ChartSpline,
     href: "/activities/chart",
   },
+  toolbarActions: [
+    { label: "Report 7 KAIH", href: "/activities/kaih", icon: FileBarChart },
+  ],
   actions: {
     view: true,
     create: true,
