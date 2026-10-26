@@ -40,6 +40,12 @@ export default function UsersPage() {
                 placeholder: "Cari QR",
               },
               {
+                key: "rfid_card_code",
+                label: "RFID",
+                type: "text" as const,
+                placeholder: "Cari kode RFID",
+              },
+              {
                 key: "learning_group_id",
                 label: "Grup belajar",
                 type: "search" as const,
@@ -138,6 +144,7 @@ export default function UsersPage() {
             { key: "context_code", label: "No Identitas" },
             { key: "status", label: "Status" },
             { key: "barcode", label: "QR" },
+            { key: "rfid_card_code", label: "Kode RFID" },
             { key: "created_at", label: "Tanggal Dibuat" },
           ]
         : [
@@ -147,6 +154,7 @@ export default function UsersPage() {
             { key: "context_type", label: "Tipe Identitas" },
             { key: "context_code", label: "No Identitas" },
             { key: "status", label: "Status" },
+            { key: "rfid_card_code", label: "Kode RFID" },
             { key: "created_at", label: "Tanggal Dibuat" },
           ];
       const response = await fetch(

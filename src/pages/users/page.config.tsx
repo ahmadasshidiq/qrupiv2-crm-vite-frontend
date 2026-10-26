@@ -73,6 +73,12 @@ export const USERS_PAGE_CONFIG: BackendModuleConfig = {
       placeholder: "Contoh: 1234567890",
     },
     {
+      key: "rfid_card_code",
+      label: "Kode RFID",
+      placeholder: "Tap kartu atau ketik kode RFID",
+      helperText: "Opsional. Kode kartu RFID untuk absensi tap kartu. Harus unik.",
+    },
+    {
       key: "status",
       label: "Status",
       required: true,
@@ -128,6 +134,7 @@ export const USERS_PAGE_CONFIG: BackendModuleConfig = {
     { key: "name", title: "Nama" },
     { key: "email", title: "Email" },
     { key: "barcode", title: "QR" },
+    { key: "rfid_card_code", title: "RFID" },
     { key: "institution_name", title: "Institusi" },
     {
       key: "type",
