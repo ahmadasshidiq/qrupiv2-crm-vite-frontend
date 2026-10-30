@@ -22,7 +22,7 @@ type QuizQuestion = {
   type: QuizQuestionType;
   options: QuizOption[];
   correct_answer: string;
-  points: number;
+  points: number | "";
 };
 
 const createQuestion = (): QuizQuestion => ({
@@ -143,7 +143,12 @@ export function QuizQuestionEditor({
       <input
         type="hidden"
         name={name}
-        value={JSON.stringify(questions)}
+        value={JSON.stringify(
+          questions.map((question) => ({
+            ...question,
+            points: Number(question.points),
+          })),
+        )}
         required={required}
       />
       {questions.map((question, questionIndex) => (
@@ -352,7 +357,10 @@ export function QuizQuestionEditor({
                   required={required}
                   onChange={(event) =>
                     updateQuestion(questionIndex, {
-                      points: Number(event.target.value),
+                      points:
+                        event.target.value === ""
+                          ? ""
+                          : Number(event.target.value),
                     })
                   }
                 />
