@@ -1173,9 +1173,32 @@ function MultipleFilesField({
         accept={field.accept}
         className="sr-only"
         required={required}
-        onChange={(event) =>
-          setSelectedFiles(Array.from(event.target.files ?? []))
-        }
+        onChange={(event) => {
+          const files = Array.from(event.target.files ?? []);
+          const allowedExtensions = field.accept
+            ?.split(",")
+            .map((extension) => extension.trim().toLowerCase())
+            .filter((extension) => extension.startsWith("."));
+          const hasInvalidFile =
+            !!allowedExtensions?.length &&
+            files.some(
+              (file) =>
+                !allowedExtensions.some((extension) =>
+                  file.name.toLowerCase().endsWith(extension),
+                ),
+            );
+
+          if (hasInvalidFile) {
+            toast.error(
+              `Format file tidak didukung. Gunakan ${allowedExtensions?.join(", ")}.`,
+            );
+            event.target.value = "";
+            setSelectedFiles([]);
+            return;
+          }
+
+          setSelectedFiles(files);
+        }}
       />
 
       <label

@@ -200,9 +200,9 @@ export const LEARNING_RESOURCES_PAGE_CONFIG: BackendModuleConfig = {
       label: "Upload file materi",
       type: "file-multi",
       fullWidth: true,
-      accept: ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,image/*,video/*",
+      accept: ".pdf,.png,.jpg,.jpeg,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.mp4,.mov,.webm,.mkv,.avi",
       visibleWhen: { key: "type", values: ["media"] },
-      helperText: "Unggah dokumen, gambar, atau video materi.",
+      helperText: "Format: PDF, PNG, JPG, JPEG, Word, Excel, PowerPoint, atau video (MP4, MOV, WEBM, MKV, AVI).",
     },
     {
       key: "h5p_editor",
