@@ -47,15 +47,17 @@ import { PermissionSelector, type Permission } from "@/components/permission-sel
 function getFormSaveErrorMessage(error: unknown) {
   if (!(error instanceof ApiError)) return "Data gagal disimpan.";
 
-  if (
-    error.message.includes(
-      "period_type is required when period_limit is greater than 0",
-    )
-  ) {
+  const detail = error.detail ?? error.message;
+
+  if (detail.includes("period_type is required when period_limit is greater than 0")) {
     return "Rentang batas tambahan belum dipilih. Pilih rentangnya, atau isi 0 pada maksimum pencatatan jika tidak ingin memakai batas tambahan.";
   }
 
-  return error.message;
+  if (detail.includes("period_limit must be greater than 0 when period_type")) {
+    return "Maksimum pencatatan pada rentang harus lebih dari 0, atau pilih \"Tidak ada batas tambahan\".";
+  }
+
+  return error.detail ? `${error.message}: ${error.detail}` : error.message;
 }
 
 type ModuleFormPageProps = {
