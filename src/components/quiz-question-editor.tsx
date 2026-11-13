@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CirclePlus, Trash2 } from "lucide-react";
+import { CirclePlus, FileUp, ImageOff, Trash2, TriangleAlert, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,20 +10,17 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
+import {
+  QuizImportDialog,
+  type QuizImportMode,
+} from "@/components/quiz-import-dialog";
+import type {
+  QuizImportResultDto,
+  QuizQuestionDto,
+  QuizQuestionTypeDto as QuizQuestionType,
+} from "@/lib/dto/quiz-import";
 
-type QuizOption = { label: string; value: string };
-type QuizQuestionType =
-  | "multiple_choice"
-  | "true_false"
-  | "fill_blank"
-  | "essay";
-type QuizQuestion = {
-  question_text: string;
-  type: QuizQuestionType;
-  options: QuizOption[];
-  correct_answer: string;
-  points: number | "";
-};
+type QuizQuestion = Omit<QuizQuestionDto, "points"> & { points: number | "" };
 
 const createQuestion = (): QuizQuestion => ({
   question_text: "",
@@ -74,6 +71,7 @@ function normalizeQuestions(value: unknown): QuizQuestion[] {
       options,
       correct_answer: String(source.correct_answer ?? options[0]?.value ?? "A"),
       points: Number(source.points ?? 1),
+      ...(source.image_url ? { image_url: String(source.image_url) } : {}),
     };
   });
 }
@@ -90,6 +88,17 @@ export function QuizQuestionEditor({
   const [questions, setQuestions] = useState<QuizQuestion[]>(() =>
     normalizeQuestions(initialQuestions),
   );
+  const [importOpen, setImportOpen] = useState(false);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
+
+  const applyImport = (result: QuizImportResultDto, mode: QuizImportMode) => {
+    const imported = normalizeQuestions(result.questions);
+    setQuestions((current) => {
+      const hasContent = current.some((question) => question.question_text.trim());
+      return mode === "replace" || !hasContent ? imported : [...current, ...imported];
+    });
+    setImportWarnings(result.warnings);
+  };
 
   const updateQuestion = (index: number, updates: Partial<QuizQuestion>) => {
     setQuestions((current) =>
@@ -151,6 +160,42 @@ export function QuizQuestionEditor({
         )}
         required={required}
       />
+      <div className="flex flex-col justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50/60 p-4 dark:border-blue-900/60 dark:bg-blue-950/20 sm:flex-row sm:items-center">
+        <div>
+          <p className="text-sm font-semibold">Punya soal dalam bentuk PDF atau scan?</p>
+          <p className="text-xs text-slate-600 dark:text-slate-300">
+            Import untuk mengisi soal, tipe, pilihan jawaban, poin, dan gambar secara otomatis.
+          </p>
+        </div>
+        <Button type="button" variant="outline" className="shrink-0" onClick={() => setImportOpen(true)}>
+          <FileUp className="size-4" /> Import dari PDF/Scan
+        </Button>
+      </div>
+      {importWarnings.length ? (
+        <div className="relative rounded-xl border border-amber-200 bg-amber-50/60 p-4 pr-10 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-200">
+          <p className="flex items-center gap-2 font-semibold">
+            <TriangleAlert className="size-4" /> Periksa hasil import
+          </p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-5">
+            {importWarnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="absolute top-2 right-2"
+            aria-label="Tutup peringatan"
+            onClick={() => setImportWarnings([])}
+          >
+            <X className="size-3.5" />
+          </Button>
+        </div>
+      ) : null}
+      {importOpen ? (
+        <QuizImportDialog open onOpenChange={setImportOpen} onImported={applyImport} />
+      ) : null}
       {questions.map((question, questionIndex) => (
         <article
           key={questionIndex}
@@ -220,6 +265,27 @@ export function QuizQuestionEditor({
                 }
               />
             </div>
+            {question.image_url ? (
+              <div className="grid gap-1.5">
+                <Label>Gambar soal</Label>
+                <div className="flex items-start gap-2">
+                  <img
+                    src={question.image_url}
+                    alt={`Gambar soal ${questionIndex + 1}`}
+                    className="max-h-56 max-w-full rounded-lg border border-slate-200 bg-white object-contain dark:border-white/10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40"
+                    onClick={() => updateQuestion(questionIndex, { image_url: undefined })}
+                  >
+                    <ImageOff className="size-3.5" /> Hapus gambar
+                  </Button>
+                </div>
+              </div>
+            ) : null}
             {question.options.length > 0 ? (
               <div className="grid gap-2">
                 <Label>Pilihan jawaban</Label>
@@ -301,7 +367,14 @@ export function QuizQuestionEditor({
             ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-1.5">
-                <Label>Jawaban benar</Label>
+                <Label>
+                  Jawaban benar
+                  {!question.correct_answer ? (
+                    <span className="ml-1 text-xs font-normal text-red-600 dark:text-red-400">
+                      (belum diisi)
+                    </span>
+                  ) : null}
+                </Label>
                 {question.options.length > 0 ? (
                   <Select
                     value={question.correct_answer}
