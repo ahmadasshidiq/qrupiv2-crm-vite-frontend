@@ -163,6 +163,65 @@ export function buildAttendanceReportTemplate({
         line-height: 1.8
       }
 
+      .attendance-detail {
+        margin-top: 0
+      }
+
+      .attendance-detail th,
+      .attendance-detail td {
+        padding: 7px 12px;
+        font-size: 11px;
+        border-bottom: 1px solid #e2e8f0
+      }
+
+      .attendance-detail tr {
+        break-inside: avoid
+      }
+
+      .attendance-detail .time {
+        text-align: center;
+        width: 10%;
+        font-variant-numeric: tabular-nums
+      }
+
+      .detail-name {
+        vertical-align: top;
+        font-weight: 600;
+        color: #0f172a;
+        background: #f8fafc;
+        border-right: 1px solid #e2e8f0
+      }
+
+      .detail-code {
+        margin-top: 2px;
+        font-weight: 400;
+        color: #64748b;
+        font-size: 10px
+      }
+
+      .status {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600
+      }
+
+      .status-present {
+        background: #dcfce7;
+        color: #166534
+      }
+
+      .status-late {
+        background: #fef3c7;
+        color: #92400e
+      }
+
+      .status-absent {
+        background: #fee2e2;
+        color: #991b1b
+      }
+
       .footer {
         margin-top: 24px;
         color: #94a3b8;
@@ -181,6 +240,11 @@ export function buildAttendanceReportTemplate({
 
         header {
           break-inside: avoid
+        }
+
+        .status {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact
         }
 
         .page-break {
