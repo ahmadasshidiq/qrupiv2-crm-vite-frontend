@@ -87,6 +87,7 @@ export type BackendModuleConfig = {
   display?: "table" | "cards";
   detailRenderer?: (record: ApiRecordDto) => ReactNode;
   appendDetailRenderer?: boolean;
+  prependDetailRenderer?: boolean;
   renderRowActions?: (record: ApiRecordDto) => ReactNode;
   editableFields?: ModuleFormField[];
   multipart?: boolean;

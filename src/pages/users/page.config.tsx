@@ -1,6 +1,8 @@
 import type { BackendModuleConfig } from "@/components/backend-module-page";
 import { Badge } from "@/components/ui/badge";
 import qrupiLogo from "@/assets/qrupi-logo.png";
+import { UserProfileHeader } from "@/pages/users/components/user-profile-header";
+import { UserQrPreview } from "@/pages/users/components/user-qr-preview";
 export const USERS_PAGE_CONFIG: BackendModuleConfig = {
   behaviorKey: "Pengguna",
   title: "Pengguna",
@@ -105,6 +107,9 @@ export const USERS_PAGE_CONFIG: BackendModuleConfig = {
     import: true,
     export: true,
   },
+  detailRenderer: (record) => <UserProfileHeader record={record} />,
+  appendDetailRenderer: true,
+  prependDetailRenderer: true,
   fields: [
     {
       key: "avatar_url",
@@ -133,7 +138,16 @@ export const USERS_PAGE_CONFIG: BackendModuleConfig = {
     { key: "context_code", title: "No. identitas" },
     { key: "name", title: "Nama" },
     { key: "email", title: "Email" },
-    { key: "barcode", title: "QR" },
+    {
+      key: "barcode",
+      title: "QR",
+      formatter: (value, record) =>
+        typeof value === "string" && value.trim() && value !== "-" ? (
+          <UserQrPreview code={value} name={record?.name ? String(record.name) : undefined} />
+        ) : (
+          "-"
+        ),
+    },
     { key: "rfid_card_code", title: "RFID" },
     { key: "institution_name", title: "Institusi" },
     {

@@ -191,8 +191,9 @@ function BackendModuleFormPageContent({
                 customDetails
               ) : (
                 <>
+                  {config.prependDetailRenderer ? customDetails : null}
                   <RecordDetails record={record} fields={fields} />
-                  {customDetails}
+                  {config.prependDetailRenderer ? null : customDetails}
                 </>
               )}
             </div>
