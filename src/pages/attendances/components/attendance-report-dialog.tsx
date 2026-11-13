@@ -24,6 +24,7 @@ import type { ApiRecordDto } from "@/lib/dto/api";
 import { getAuthUser } from "@/lib/auth/session";
 import qrupiLogo from "@/assets/qrupi-logo.png";
 import { buildAttendanceReportTemplate } from "../templates/attendance-report-template";
+import { formatTime } from "@/lib/helper/date";
 
 function formatDate(value: unknown) {
   if (!value || value === "-") return "-";
@@ -107,6 +108,10 @@ function getStudentContextCode(record: ApiRecordDto) {
   return String(record.user_context_code ?? "-");
 }
 
+function getStudentKey(record: ApiRecordDto) {
+  return `${String(record.user_id ?? record.user_name)}::${String(record.learning_group_id ?? record.learning_group_name ?? "")}`;
+}
+
 function renderAbsenceDetails(
   people: ApiRecordDto[],
   getRecords: (person: ApiRecordDto) => ApiRecordDto[],
@@ -131,6 +136,52 @@ function renderAbsenceDetails(
         : "";
     })
     .join("");
+}
+
+function renderAttendanceDetails(
+  people: ApiRecordDto[],
+  getRecords: (person: ApiRecordDto) => ApiRecordDto[],
+  reasonNames: Map<string, string>,
+  showCheckOut: boolean,
+) {
+  const rows = people
+    .map((person) => {
+      const records = [...getRecords(person)].sort((a, b) =>
+        String(getAttendanceDate(a) ?? "").localeCompare(
+          String(getAttendanceDate(b) ?? ""),
+        ),
+      );
+      return records
+        .map((record, index) => {
+          const absent = record.status === "absent";
+          const status = absent
+            ? `<span class="status status-absent">${html(getAbsenceReason(record, reasonNames))}</span>`
+            : record.status === "late"
+              ? '<span class="status status-late">Terlambat</span>'
+              : '<span class="status status-present">Hadir</span>';
+          const nameCell =
+            index === 0
+              ? `<td class="detail-name" rowspan="${records.length}">${html(person.user_name)}<div class="detail-code">${html([getStudentContextCode(person), person.learning_group_name].filter(Boolean).join(" · "))}</div></td>`
+              : "";
+          return `<tr>${nameCell}
+            <td>${formatDate(getAttendanceDate(record))}</td>
+            <td class="time">${absent ? "-" : formatTime(record.check_in_at ?? record.check_in)}</td>
+            ${showCheckOut ? `<td class="time">${absent ? "-" : formatTime(record.check_out_at ?? record.check_out)}</td>` : ""}
+            <td>${status}</td>
+          </tr>`;
+        })
+        .join("");
+    })
+    .join("");
+  if (!rows) return "";
+  return `<h2 class="absence-title">Rincian Kehadiran</h2>
+    <table class="attendance-detail"><thead><tr>
+      <th style="width: 28%">Nama</th>
+      <th>Tanggal</th>
+      <th class="time">Masuk</th>
+      ${showCheckOut ? '<th class="time">Keluar</th>' : ""}
+      <th>Keterangan</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function renderSummaryTable(
@@ -297,18 +348,23 @@ export function AttendanceReportDialog({
       const students = [
         ...new Map(
           filtered.map((record) => [
-            String(record.user_id ?? record.user_name),
+            getStudentKey(record),
             record,
           ]),
         ).values(),
-      ];
+      ].sort(
+        (a, b) =>
+          String(a.learning_group_name ?? "").localeCompare(
+            String(b.learning_group_name ?? ""),
+          ) || String(a.user_name ?? "").localeCompare(String(b.user_name ?? "")),
+      );
       const studentRecords = new Map(
         students.map((student) => [
-          String(student.user_id ?? student.user_name),
+          getStudentKey(student),
           filtered.filter(
             (record) =>
-              String(record.user_id ?? record.user_name) ===
-              String(student.user_id ?? student.user_name),
+              getStudentKey(record) ===
+              getStudentKey(student),
           ),
         ]),
       );
@@ -317,7 +373,7 @@ export function AttendanceReportDialog({
           const monthStudents = students.filter((student) =>
             (
               studentRecords.get(
-                String(student.user_id ?? student.user_name),
+                getStudentKey(student),
               ) ?? []
             ).some(
               (record) =>
@@ -327,7 +383,7 @@ export function AttendanceReportDialog({
           const monthRecords = monthStudents.flatMap((student) =>
             (
               studentRecords.get(
-                String(student.user_id ?? student.user_name),
+                getStudentKey(student),
               ) ?? []
             ).filter(
               (record) =>
@@ -371,7 +427,7 @@ export function AttendanceReportDialog({
             .map((student) => {
               const records = (
                 studentRecords.get(
-                  String(student.user_id ?? student.user_name),
+                  getStudentKey(student),
                 ) ?? []
               ).filter(
                 (record) =>
@@ -404,7 +460,7 @@ export function AttendanceReportDialog({
             .map((student) => {
               const records = (
                 studentRecords.get(
-                  String(student.user_id ?? student.user_name),
+                  getStudentKey(student),
                 ) ?? []
               ).filter(
                 (record) =>
@@ -419,7 +475,7 @@ export function AttendanceReportDialog({
                 .join("<br>");
               return details
                 ? `<div class="absence-detail">
-                    <strong>${html(student.user_name)}</strong>
+                    <strong>${html(student.user_name)}</strong>${student.learning_group_name ? ` <span class="detail-code">(${html(student.learning_group_name)})</span>` : ""}
                     <br>${details}
                    </div>`
                 : "";
@@ -436,13 +492,28 @@ export function AttendanceReportDialog({
             studentSummaryRows,
             5 + absenceReasons.length,
           );
+          const attendanceDetails = renderAttendanceDetails(
+            monthStudents,
+            (student) =>
+              (
+                studentRecords.get(
+                  getStudentKey(student),
+                ) ?? []
+              ).filter(
+                (record) =>
+                  String(getAttendanceDate(record) ?? "").slice(0, 7) === month,
+              ),
+            reasonNames,
+            false,
+          );
           return `
           <h2 class="month-title">${formatMonthLabel(month)}</h2>
             ${table}
           <h2 class="absence-title">Keterangan Ketidakhadiran</h2>
           <div class="absence-details">
             ${absenceDetails || "Tidak ada ketidakhadiran pada bulan ini."}
-          </div>`;
+          </div>
+          ${attendanceDetails}`;
         })
         .join('<div class="page-break"></div>');
       const teacherMonthlyTable = reportMonths
@@ -512,13 +583,25 @@ export function AttendanceReportDialog({
             teacherRows,
             5 + allAbsenceReasons.length,
           );
+          const attendanceDetails = renderAttendanceDetails(
+            teachers,
+            (teacher) =>
+              monthRecords.filter(
+                (record) =>
+                  String(record.user_id ?? record.user_name) ===
+                  String(teacher.user_id ?? teacher.user_name),
+              ),
+            reasonNames,
+            true,
+          );
           return `
           <h2 class="month-title">${formatMonthLabel(month)}</h2>
             ${table}
           <h2 class="absence-title">Keterangan Ketidakhadiran</h2>
           <div class="absence-details">
             ${absenceDetails || "Tidak ada ketidakhadiran pada bulan ini."}
-          </div>`;
+          </div>
+          ${attendanceDetails}`;
         })
         .join('<div class="page-break"></div>');
       const reportTable =
