@@ -110,6 +110,7 @@ export const USERS_PAGE_CONFIG: BackendModuleConfig = {
   detailRenderer: (record) => <UserProfileHeader record={record} />,
   appendDetailRenderer: true,
   prependDetailRenderer: true,
+  hiddenDetailFields: ["file"],
   fields: [
     {
       key: "avatar_url",
@@ -168,7 +169,7 @@ export const USERS_PAGE_CONFIG: BackendModuleConfig = {
           student: {
             label: "Siswa",
             className:
-              "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:ring-emerald-900",
+              "bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-900",
           },
         };
 

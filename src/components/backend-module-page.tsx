@@ -88,6 +88,7 @@ export type BackendModuleConfig = {
   detailRenderer?: (record: ApiRecordDto) => ReactNode;
   appendDetailRenderer?: boolean;
   prependDetailRenderer?: boolean;
+  hiddenDetailFields?: string[];
   renderRowActions?: (record: ApiRecordDto) => ReactNode;
   editableFields?: ModuleFormField[];
   multipart?: boolean;

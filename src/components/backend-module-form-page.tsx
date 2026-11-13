@@ -192,7 +192,13 @@ function BackendModuleFormPageContent({
               ) : (
                 <>
                   {config.prependDetailRenderer ? customDetails : null}
-                  <RecordDetails record={record} fields={fields} />
+                  <RecordDetails
+                    record={record}
+                    fields={fields.filter(
+                      (field) =>
+                        !config.hiddenDetailFields?.includes(field.key),
+                    )}
+                  />
                   {config.prependDetailRenderer ? null : customDetails}
                 </>
               )}
@@ -489,7 +495,7 @@ function RecordDetailCard({
                           : "Tidak Aktif"
                         : (statusLabels[String(value ?? "").toLowerCase()] ??
                           String(value ?? "-"))
-                      : String(value ?? "-");
+                      : String(value ?? "-").trim() || "-";
 
   return (
     <div
