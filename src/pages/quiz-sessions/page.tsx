@@ -1,12 +1,15 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { DefaultModulePage } from "@/components/backend-module-page";
 import { getAuthUser } from "@/lib/auth/session";
 import { toast } from "sonner";
 import { getCsrfToken } from "@/lib/auth/session";
 import { fetchQuizSessions } from "./actions";
 import { QUIZ_SESSIONS_PAGE_CONFIG } from "./page.config";
+import { QuizReportDialog } from "./components/quiz-report-dialog";
 
 export default function QuizSessionsPage() {
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportKey, setReportKey] = useState(0);
   const exportQuizSessions = useCallback(async (dateRange?: { from: string; to: string }) => {
     try {
       const institutionName = getAuthUser()?.institution?.name ?? "Institusi";
@@ -81,10 +84,19 @@ export default function QuizSessionsPage() {
   }, []);
 
   return (
-    <DefaultModulePage
-      config={QUIZ_SESSIONS_PAGE_CONFIG}
-      fetchPage={fetchQuizSessions}
-      onExport={(dateRange) => void exportQuizSessions(dateRange)}
-    />
+    <>
+      <DefaultModulePage
+        config={QUIZ_SESSIONS_PAGE_CONFIG}
+        fetchPage={fetchQuizSessions}
+        onExport={(dateRange) => void exportQuizSessions(dateRange)}
+        onToolbarAction={(action) => {
+          if (action.href !== "#quiz-report") return false;
+          setReportKey((value) => value + 1);
+          setReportOpen(true);
+          return true;
+        }}
+      />
+      <QuizReportDialog key={reportKey} open={reportOpen} onOpenChange={setReportOpen} />
+    </>
   );
 }
