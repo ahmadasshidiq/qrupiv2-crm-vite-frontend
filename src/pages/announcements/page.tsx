@@ -1,17 +1,10 @@
-import { useMemo } from "react";
 import { DefaultModulePage } from "@/components/backend-module-page";
-import { getAuthUser, getRoleName } from "@/lib/auth/session";
 import { fetchPaginated } from "@/lib/api/paginated";
 import type { ApiRecordDto } from "@/lib/dto/api";
-import { getAnnouncementsPageConfig } from "./page.config";
+import { useAnnouncementsPageConfig } from "./use-announcements-page-config";
 
 export default function AnnouncementsPage() {
-  const user = getAuthUser();
-  const role = getRoleName(user);
-  const config = useMemo(
-    () => getAnnouncementsPageConfig(role, user?.id),
-    [role, user?.id],
-  );
+  const config = useAnnouncementsPageConfig();
   return (
     <DefaultModulePage
       config={config}
