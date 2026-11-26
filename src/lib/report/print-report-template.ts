@@ -1,4 +1,4 @@
-export type AttendanceReportTemplateParams = {
+export type PrintReportTemplateParams = {
   title: string;
   institutionName: string;
   institutionAddress: string;
@@ -9,9 +9,10 @@ export type AttendanceReportTemplateParams = {
   period: string;
   content: string;
   generatedAt: string;
+  extraStyles?: string;
 };
 
-export function buildAttendanceReportTemplate({
+export function buildPrintReportTemplate({
   title,
   institutionName,
   institutionAddress,
@@ -22,7 +23,8 @@ export function buildAttendanceReportTemplate({
   period,
   content,
   generatedAt,
-}: AttendanceReportTemplateParams) {
+  extraStyles = "",
+}: PrintReportTemplateParams) {
   return `<!doctype html>
 <html>
   <head>
@@ -227,6 +229,8 @@ export function buildAttendanceReportTemplate({
         color: #94a3b8;
         font-size: 11px
       }
+
+      ${extraStyles}
 
       @media print {
         body {

@@ -21,9 +21,8 @@ import {
 import { apiRequest } from "@/lib/api/client";
 import type { AttendanceCategory } from "../actions";
 import type { ApiRecordDto } from "@/lib/dto/api";
-import { getAuthUser } from "@/lib/auth/session";
-import qrupiLogo from "@/assets/qrupi-logo.png";
-import { buildAttendanceReportTemplate } from "../templates/attendance-report-template";
+import { escapeHtml as html } from "@/lib/helper/html";
+import { openPrintReport } from "@/lib/report/print-report";
 import { formatTime } from "@/lib/helper/date";
 
 function formatDate(value: unknown) {
@@ -59,16 +58,6 @@ function monthRange(from: string, to: string) {
 function monthEndDate(month: string) {
   const [year, monthNumber] = month.split("-").map(Number);
   return `${month}-${String(new Date(year, monthNumber, 0).getDate()).padStart(2, "0")}`;
-}
-
-function html(value: unknown) {
-  return String(value ?? "-").replace(
-    /[&<>"']/g,
-    (character) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        character
-      ] ?? character,
-  );
 }
 
 function formatMonthLabel(month: string) {
@@ -328,22 +317,6 @@ export function AttendanceReportDialog({
         category === "student"
           ? "Laporan Absensi Siswa"
           : "Laporan Absensi Guru";
-      const user = getAuthUser();
-      const institution = user?.institution as
-        | (Record<string, unknown> & {
-            name?: string;
-            file_url?: string;
-            avatar_url?: string;
-          })
-        | null
-        | undefined;
-      const schoolLogo = String(
-        institution?.file_url ?? institution?.avatar_url ?? "",
-      );
-      const institutionName = String(institution?.name ?? "Institusi");
-      const institutionPhone = String(institution?.phone ?? "");
-      const institutionWebsite = String(institution?.website ?? "");
-      const institutionAddress = String(institution?.address ?? "");
       const reportMonths = monthRange(from, to);
       const students = [
         ...new Map(
@@ -606,29 +579,14 @@ export function AttendanceReportDialog({
         .join('<div class="page-break"></div>');
       const reportTable =
         category === "student" ? studentSummaryTable : teacherMonthlyTable;
-      const report = window.open("", "_blank", "width=1200,height=800");
-      if (!report)
+      const opened = openPrintReport({
+        title,
+        period: `${formatMonthLabel(from)} - ${formatMonthLabel(to)}`,
+        content: reportTable,
+      });
+      if (!opened)
         return toast.error("Izinkan pop-up browser untuk mencetak report.");
-      report.document.write(
-        buildAttendanceReportTemplate({
-          title,
-          institutionName: html(institutionName),
-          institutionAddress: html(institutionAddress),
-          institutionPhone: html(institutionPhone),
-          institutionWebsite: html(institutionWebsite),
-          schoolLogo: html(schoolLogo),
-          qrupiLogo: html(qrupiLogo),
-          period: `${formatMonthLabel(from)} - ${formatMonthLabel(to)}`,
-          content: reportTable,
-          generatedAt: new Date().toLocaleString("id-ID"),
-        }),
-      );
-      report.document.close();
-      report.focus();
-      window.setTimeout(() => report.print(), 300);
       onOpenChange(false);
-      return;
-      if (!report) return;
     } catch {
       toast.error("Report absensi gagal dibuat.");
     } finally {

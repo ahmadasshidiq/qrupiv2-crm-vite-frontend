@@ -18,9 +18,8 @@ import {
   KAIH_CATEGORIES,
   type KaihDashboardResponseDto,
 } from "@/lib/dto/kaih-dashboard";
-import { buildAttendanceReportTemplate } from "@/pages/attendances/templates/attendance-report-template";
-import qrupiLogo from "@/assets/qrupi-logo.png";
-import { getAuthUser } from "@/lib/auth/session";
+import { openPrintReport } from "@/lib/report/print-report";
+import { escapeHtml } from "@/lib/helper/html";
 
 function dateValue(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -40,16 +39,6 @@ type KaihFilters = {
   end_date: string;
   learning_group_id: string | null;
 };
-
-function escapeHtml(value: unknown) {
-  return String(value ?? "").replace(
-    /[&<>"']/g,
-    (character) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        character
-      ] ?? character,
-  );
-}
 
 function formatReportDate(value: string) {
   const date = new Date(`${value}T00:00:00`);
@@ -76,18 +65,6 @@ function exportKaihPdf(
     groups.find(
       (group) => String(group.id) === String(filters.learning_group_id),
     )?.name ?? "Semua grup";
-  const user = getAuthUser();
-  const institution = user?.institution as
-    | {
-        name?: string;
-        address?: string;
-        phone?: string;
-        website?: string;
-        file_url?: string;
-        avatar_url?: string;
-      }
-    | null
-    | undefined;
   const rows = reportData.students
     .map(
       (student) =>
@@ -102,28 +79,12 @@ function exportKaihPdf(
     )
     .join("");
   const content = `<h2 style="margin:24px 0 8px;font-size:18px;color:#1d4ed8">Ringkasan 7 KAIH</h2><p><strong>Grup belajar:</strong> ${escapeHtml(groupName)} · <strong>Minimum per kategori:</strong> ${reportData.minimum_per_kategori}</p><table class="student-summary"><thead><tr><th>No</th><th>Nama Siswa</th>${KAIH_CATEGORIES.map((category) => `<th>${escapeHtml(category)}</th>`).join("")}<th>Rata-rata</th><th>Predikat</th></tr></thead><tbody>${rows || `<tr><td colspan="12">Belum ada data pada periode ini.</td></tr>`}</tbody></table>`;
-  const report = window.open("", "_blank", "width=1200,height=800");
-  if (!report)
-    return toast.error("Izinkan pop-up browser untuk mencetak report.");
-  report.document.write(
-    buildAttendanceReportTemplate({
-      title: "Laporan 7 KAIH Siswa",
-      institutionName: String(institution?.name ?? "JAXER"),
-      institutionAddress: String(institution?.address ?? ""),
-      institutionPhone: String(institution?.phone ?? ""),
-      institutionWebsite: String(institution?.website ?? ""),
-      schoolLogo: String(
-        institution?.file_url ?? institution?.avatar_url ?? "",
-      ),
-      qrupiLogo,
-      period: `${formatReportDate(filters.start_date)} - ${formatReportDate(filters.end_date)}`,
-      content,
-      generatedAt: new Date().toLocaleString("id-ID"),
-    }),
-  );
-  report.document.close();
-  report.focus();
-  window.setTimeout(() => report.print(), 300);
+  const opened = openPrintReport({
+    title: "Laporan 7 KAIH Siswa",
+    period: `${formatReportDate(filters.start_date)} - ${formatReportDate(filters.end_date)}`,
+    content,
+  });
+  if (!opened) toast.error("Izinkan pop-up browser untuk mencetak report.");
 }
 
 export default function KaihPage() {
