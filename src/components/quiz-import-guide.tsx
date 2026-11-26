@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "@/lib/icons";
 import {
   Popover,
   PopoverContent,

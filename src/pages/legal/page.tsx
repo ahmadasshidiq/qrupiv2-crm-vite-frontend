@@ -1,4 +1,4 @@
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "@/lib/icons";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import qrupiLogo from "@/assets/qrupi-logo.png";

@@ -5,7 +5,7 @@ import {
   Eye,
   EyeOff,
   GraduationCap,
-} from "lucide-react";
+} from "@/lib/icons";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";

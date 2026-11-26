@@ -1,4 +1,4 @@
-import { Activity, Building2, GraduationCap, Layers3 } from "lucide-react";
+import { Activity, Building2, GraduationCap, Layers3 } from "@/lib/icons";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { divIcon } from "leaflet";
 

@@ -35,8 +35,8 @@ import {
   Trash2,
   Upload,
   School,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+} from "@/lib/icons";
+import type { AppIcon } from "@/lib/icons";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/popover";
 import type { DateRange } from "react-day-picker";
 import { format } from "date-fns";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays } from "@/lib/icons";
 import { archiveResource, deleteResource } from "@/lib/api/resource";
 import { getAuthUser, getRoleName, hasPermission } from "@/lib/auth/session";
 import { getModuleBehavior } from "@/lib/module-behaviors";
@@ -72,14 +72,14 @@ export type BackendModuleConfig = {
   toolbarActions?: Array<{
     label: string;
     href: string;
-    icon?: LucideIcon;
+    icon?: AppIcon;
     className?: string;
   }>;
   filterAction?: { label: string };
   allowToolbarActionsWithoutCreate?: boolean;
   headerAction?: {
     label: string;
-    icon?: LucideIcon;
+    icon?: AppIcon;
     href?: string;
   };
   backHref?: string;
@@ -182,7 +182,7 @@ type DefaultModulePageProps = {
   onToolbarAction?: (action: {
     label: string;
     href: string;
-    icon?: LucideIcon;
+    icon?: AppIcon;
   }, filters?: PaginationFilters) => boolean;
   onFilterAction?: (filters: PaginationFilters) => void;
   onHeaderAction?: () => void;

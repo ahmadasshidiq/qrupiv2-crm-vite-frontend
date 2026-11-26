@@ -13,7 +13,7 @@ import {
   Image,
   Trash2,
   UploadCloud,
-} from "lucide-react";
+} from "@/lib/icons";
 import {
   type BackendModuleConfig,
   type ModuleFormField,

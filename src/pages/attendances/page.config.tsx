@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { BackendModuleConfig } from "@/components/backend-module-page";
 import { Badge } from "@/components/ui/badge";
-import { ChartSpline, ClipboardList, FileText } from "lucide-react";
+import { ChartSpline, ClipboardList, FileText } from "@/lib/icons";
 import { AttendanceLog } from "./components/attendance-log";
 import type { ApiRecordDto } from "@/lib/dto/api";
 

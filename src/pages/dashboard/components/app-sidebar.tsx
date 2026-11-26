@@ -1,4 +1,4 @@
-import { ChevronDown, LogOut } from "lucide-react";
+import { ChevronDown, LogOut } from "@/lib/icons";
 import { useState } from "react";
 import qrupiLogo from "@/assets/qrupi-logo.png";
 import qrupiLogoWhite from "@/assets/qrupi-logo-white.png";

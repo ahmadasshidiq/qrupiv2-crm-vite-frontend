@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, CalendarCheck, GraduationCap, Layers3, Trophy } from "lucide-react";
+import { Activity, AlertTriangle, CalendarCheck, GraduationCap, Layers3, Trophy } from "@/lib/icons";
 import type { ReactNode } from "react";
 import { Bar, BarChart, CartesianGrid, ChartContainer, ChartTooltip, ChartTooltipContent, XAxis, YAxis } from "@/components/ui/chart";
 

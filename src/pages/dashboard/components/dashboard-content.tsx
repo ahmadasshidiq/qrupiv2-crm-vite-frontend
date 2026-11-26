@@ -18,8 +18,8 @@ import {
   ShieldAlert,
   Trophy,
   Users,
-  type LucideIcon,
-} from "lucide-react";
+  type AppIcon,
+} from "@/lib/icons";
 import { Link } from "react-router-dom";
 import { CircleMarker, MapContainer, Popup, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -435,7 +435,7 @@ type DashboardInsight = {
 
 const fmt = new Intl.NumberFormat("id-ID");
 
-const METRIC_META: Record<MetricKey, { label: string; icon: LucideIcon }> = {
+const METRIC_META: Record<MetricKey, { label: string; icon: AppIcon }> = {
   total_institutions: { label: "Institusi", icon: Building2 },
   total_users: { label: "Pengguna", icon: Users },
   total_learning_groups: { label: "Grup Pembelajaran", icon: Layers3 },
@@ -530,7 +530,7 @@ const ROLE_LABELS: Record<string, DashboardRole> = {
   dinas_pendidikan: "Dinas Pendidikan",
 };
 
-const ALERT_META: Record<string, { label: string; icon: LucideIcon }> = {
+const ALERT_META: Record<string, { label: string; icon: AppIcon }> = {
   unfinished_quiz: { label: "Kuis belum diselesaikan", icon: BookOpen },
   attendance: { label: "Kehadiran perlu diperiksa", icon: CalendarCheck },
   submission: { label: "Pengajuan menunggu tinjauan", icon: Info },
@@ -538,7 +538,7 @@ const ALERT_META: Record<string, { label: string; icon: LucideIcon }> = {
 
 const SEVERITY_STYLE: Record<
   DashboardAlert["severity"],
-  { icon: LucideIcon; wrap: string; iconColor: string }
+  { icon: AppIcon; wrap: string; iconColor: string }
 > = {
   info: {
     icon: Info,
@@ -810,7 +810,7 @@ function InsightList({
 }: {
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: AppIcon;
   items: DashboardInsight[];
   emptyMessage: string;
   renderItem: (item: DashboardInsight, index: number) => React.ReactNode;

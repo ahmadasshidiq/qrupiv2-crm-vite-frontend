@@ -1,5 +1,5 @@
 import type { BackendModuleConfig } from "@/components/backend-module-page";
-import { Tags } from "lucide-react";
+import { Tags } from "@/lib/icons";
 export const ACTIVITY_ITEMS_PAGE_CONFIG: BackendModuleConfig = {
   title: "Jenis Aktivitas",
   description: "Atur jenis aktivitas, poin, dan batas periode.",

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FileText, LoaderCircle } from "lucide-react";
+import { FileText, LoaderCircle } from "@/lib/icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {

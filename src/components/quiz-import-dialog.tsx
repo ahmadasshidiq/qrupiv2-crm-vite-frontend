@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { CircleHelp, FileText, Loader2, Upload, X } from "lucide-react";
+import { CircleHelp, FileText, Loader2, Upload, X } from "@/lib/icons";
 import { QuizImportGuide } from "@/components/quiz-import-guide";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";

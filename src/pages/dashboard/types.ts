@@ -1,9 +1,9 @@
-import type { LucideIcon } from "lucide-react";
+import type { AppIcon } from "@/lib/icons";
 
 export type NavigationItem = {
   label: string;
   href: string;
-  icon: LucideIcon;
+  icon: AppIcon;
   badge?: string;
   roles?: string[];
   children?: NavigationItem[];
@@ -14,7 +14,7 @@ export type DashboardMetric = {
   value: string;
   change: string;
   tone: "blue" | "violet" | "orange" | "emerald";
-  icon: LucideIcon;
+  icon: AppIcon;
 };
 
 export type SearchSuggestion = {
@@ -23,6 +23,6 @@ export type SearchSuggestion = {
   category: string;
   href: string;
   keywords: string[];
-  icon: LucideIcon;
+  icon: AppIcon;
   tone: "blue" | "violet" | "orange" | "emerald";
 };

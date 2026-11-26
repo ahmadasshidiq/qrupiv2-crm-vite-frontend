@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CirclePlus, FileUp, ImageOff, Trash2, TriangleAlert, X } from "lucide-react";
+import { CirclePlus, FileUp, ImageOff, Trash2, TriangleAlert, X } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

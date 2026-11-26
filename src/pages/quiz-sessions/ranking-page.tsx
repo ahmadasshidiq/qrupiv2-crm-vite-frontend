@@ -4,7 +4,7 @@ import {
   ChartNoAxesCombined,
   FileDown,
   RotateCcw,
-} from "lucide-react";
+} from "@/lib/icons";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";

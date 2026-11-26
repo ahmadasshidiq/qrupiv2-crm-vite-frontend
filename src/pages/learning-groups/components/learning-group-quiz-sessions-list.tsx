@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList } from "@/lib/icons";
 import { SearchDropdown } from "@/components/search-dropdown";
 import { Badge } from "@/components/ui/badge";
 import {

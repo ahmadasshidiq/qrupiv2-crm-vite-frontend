@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Check, Search, Trash2, UserRoundPlus, Users } from "lucide-react";
+import { Check, Search, Trash2, UserRoundPlus, Users } from "@/lib/icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

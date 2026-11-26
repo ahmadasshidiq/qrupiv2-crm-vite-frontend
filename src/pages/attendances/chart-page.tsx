@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Printer, RotateCcw } from "lucide-react";
+import { ArrowLeft, Printer, RotateCcw } from "@/lib/icons";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";

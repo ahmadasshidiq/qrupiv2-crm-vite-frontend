@@ -16,7 +16,7 @@ import {
   SquareActivity,
   FileText,
   Megaphone,
-} from "lucide-react";
+} from "@/lib/icons";
 import type { NavigationItem, SearchSuggestion } from "./types";
 
 export const MAIN_NAVIGATION: NavigationItem[] = [

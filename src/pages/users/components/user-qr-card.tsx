@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { Download } from "lucide-react";
+import { Download } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 
 type UserQrCardProps = {

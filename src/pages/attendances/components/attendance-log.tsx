@@ -1,4 +1,4 @@
-import { MapPin } from "lucide-react";
+import { MapPin } from "@/lib/icons";
 import type { ReactElement } from "react";
 import type { ApiRecordDto } from "@/lib/dto/api";
 

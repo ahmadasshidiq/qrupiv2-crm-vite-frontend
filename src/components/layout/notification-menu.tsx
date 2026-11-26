@@ -1,4 +1,4 @@
-import { Bell, CheckCheck, ExternalLink } from "lucide-react";
+import { Bell, CheckCheck, ExternalLink } from "@/lib/icons";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {

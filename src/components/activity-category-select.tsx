@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search } from "lucide-react";
+import { Search } from "@/lib/icons";
 import { Input } from "@/components/ui/input";
 import { fetchPaginated } from "@/lib/api/paginated";
 import type { ApiRecordDto } from "@/lib/dto/api";

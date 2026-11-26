@@ -5,7 +5,7 @@ import {
   FileSpreadsheet,
   Loader2,
   Upload,
-} from "lucide-react";
+} from "@/lib/icons";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {

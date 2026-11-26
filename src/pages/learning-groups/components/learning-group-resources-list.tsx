@@ -8,7 +8,7 @@ import {
   FileText,
   Link2,
   Video,
-} from "lucide-react";
+} from "@/lib/icons";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { TableCell, TableRow } from "@/components/ui/table";

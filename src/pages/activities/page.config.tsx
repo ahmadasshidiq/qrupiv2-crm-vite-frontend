@@ -1,7 +1,7 @@
 import type { BackendModuleConfig } from "@/components/backend-module-page";
 import { Badge } from "@/components/ui/badge";
 import { truncateDescription } from "@/lib/helper/text";
-import { ChartSpline, FileBarChart } from "lucide-react";
+import { ChartSpline, FileBarChart } from "@/lib/icons";
 export const ACTIVITIES_PAGE_CONFIG: BackendModuleConfig = {
   title: "Aktivitas",
   description: "Pantau aktivitas positif dan pelanggaran siswa.",

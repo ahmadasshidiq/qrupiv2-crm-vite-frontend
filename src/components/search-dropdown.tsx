@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search } from "lucide-react";
+import { Search } from "@/lib/icons";
 import { Input } from "@/components/ui/input";
 
 const SEARCH_DEBOUNCE_MS = 700;

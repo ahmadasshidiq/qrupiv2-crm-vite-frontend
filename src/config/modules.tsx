@@ -10,15 +10,15 @@ import {
   ShieldCheck,
   Tags,
   UsersRound,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+} from "@/lib/icons";
+import type { AppIcon } from "@/lib/icons";
 
 export type AppModule = {
   title: string;
   singular: string;
   description: string;
   href: string;
-  icon: LucideIcon;
+  icon: AppIcon;
   roles?: string[];
 };
 const ADMIN_ROLES = [

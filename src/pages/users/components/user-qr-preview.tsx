@@ -1,4 +1,4 @@
-import { QrCode } from "lucide-react";
+import { QrCode } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

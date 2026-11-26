@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Search, X } from "lucide-react";
+import { Check, Search, X } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchPaginated } from "@/lib/api/paginated";

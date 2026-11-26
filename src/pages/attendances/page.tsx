@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { DefaultModulePage } from "@/components/backend-module-page";
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut } from "@/lib/icons";
 import { toast } from "sonner";
 import { apiRequest } from "@/lib/api/client";
 import { getAuthUser } from "@/lib/auth/session";

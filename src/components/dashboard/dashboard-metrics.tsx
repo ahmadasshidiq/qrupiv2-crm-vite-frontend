@@ -6,8 +6,8 @@ import {
   GraduationCap,
   Layers3,
   Users,
-  type LucideIcon,
-} from "lucide-react";
+  type AppIcon,
+} from "@/lib/icons";
 
 export type DashboardMetricKey =
   | "total_users"
@@ -22,7 +22,7 @@ export type DashboardMetricSummary = Record<DashboardMetricKey, number>;
 
 const fmt = new Intl.NumberFormat("id-ID");
 
-const METRIC_META: Record<DashboardMetricKey, { label: string; icon: LucideIcon }> = {
+const METRIC_META: Record<DashboardMetricKey, { label: string; icon: AppIcon }> = {
   total_institutions: { label: "Institusi", icon: Building2 },
   total_users: { label: "Pengguna", icon: Users },
   total_learning_groups: { label: "Grup Pembelajaran", icon: Layers3 },

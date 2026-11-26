@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, Search } from "@/lib/icons";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
